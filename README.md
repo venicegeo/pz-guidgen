@@ -1,2 +1,2 @@
-# pz-guidgen
-Core service to generate GUIDs
+# pz-uuidgen
+Core service to generate UUIDs
