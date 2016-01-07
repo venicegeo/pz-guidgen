@@ -1,7 +1,7 @@
 applications:
-- name: refapp-devops
-  host: refapp-devops
-  path: app.war
+- name: pz-uuidgen
+  host: pz-uuidgen
+  path: uuidgen
   memory: 512M
   instances: 1
   timeout: 80
