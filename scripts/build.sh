@@ -1,6 +1,11 @@
 #!/bin/sh
 
-export GOPATH=.
+pushd `dirname $0` > /dev/null
+base=$(pwd -P)
+popd > /dev/null
+
+export GOPATH=$base/gogo
+mkdir -p $GOPATH
 
 go get github.com/venicegeo/pz-uuidgen
 
