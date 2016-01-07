@@ -1,0 +1,7 @@
+applications:
+- name: refapp-devops
+  host: refapp-devops
+  path: app.war
+  memory: 512M
+  instances: 1
+  timeout: 80
