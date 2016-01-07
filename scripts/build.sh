@@ -9,4 +9,6 @@ mkdir -p $GOPATH
 
 go get github.com/venicegeo/pz-uuidgen
 
+go test -v github.com/venicegeo/pz-uuidgen
+
 go install github.com/venicegeo/pz-uuidgen
