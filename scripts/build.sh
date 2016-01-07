@@ -1,4 +1,3 @@
 #!/bin/sh
 
-go build src/uuidgen.go
-
+go install github.com/venicegeo/pz-uuidgen

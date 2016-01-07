@@ -1,3 +1,3 @@
 #!/bin/sh
 
-go test -v src/uuidgen_test.go src/uuidgen.go
+go test -v github.com/venicegeo/pz-uuidgen
