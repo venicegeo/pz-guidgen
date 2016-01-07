@@ -19,7 +19,7 @@ go install github.com/venicegeo/pz-uuidgen
 
 ls -R $GOPATH
 
-exe=uuidgen
+exe=$GOPATH/bin/pz-uuidgen
 
 # gather some data about the repo
 source $base/vars.sh
