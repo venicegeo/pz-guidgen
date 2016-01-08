@@ -1,7 +1,7 @@
 applications:
 - name: pz-uuidgen
   host: pz-uuidgen
-  path: pz-uuidgen
+  path: pz-uuidgen.go
   memory: 512M
   instances: 1
   timeout: 80

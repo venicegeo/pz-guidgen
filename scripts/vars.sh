@@ -1,7 +1,7 @@
 #!/bin/bash
 
 APP=pz-uuidgen
-EXT=bin
+EXT=go
 SHA=$(git rev-parse HEAD)
 SHORT=$(git rev-parse --short HEAD)
 ARTIFACT="$SHA.$EXT"
