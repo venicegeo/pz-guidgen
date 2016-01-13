@@ -11,10 +11,38 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var debugMode = false
 var debugCounter = 0
+
+var numRequests = 0
+var numUUIDs = 0
+
+var startTime = time.Now()
+
+type AdminUUIDGenMessage struct {
+	NumRequests int `json:"num_requests"`
+	NumUUIDs    int `json:"num_uuids"`
+}
+
+type AdminMessage struct {
+	StartTime time.Time           `json:"starttime"`
+	UUIDGen   AdminUUIDGenMessage `json:"uuidgen"`
+}
+
+func handleAdminGet(w http.ResponseWriter, r *http.Request) {
+	m := AdminMessage{StartTime: startTime, UUIDGen: AdminUUIDGenMessage{NumRequests: numRequests, NumUUIDs: numUUIDs}}
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(data)
+}
 
 // request body is ignored
 // we allow a count of zero, for testing
@@ -53,6 +81,14 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	data["data"] = uuids
 
 	bytes, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
+		return
+	}
+
+	numUUIDs += count
+	numRequests++
+
 	w.Write(bytes)
 }
 
@@ -68,6 +104,8 @@ func runUUIDServer(host string, port string, debug bool) error {
 	debugMode = debug
 
 	r := mux.NewRouter()
+	r.HandleFunc("/uuid/admin", handleAdminGet).
+		Methods("GET")
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
 

@@ -22,6 +22,36 @@ func setup(port string, debug bool) {
 	time.Sleep(250 * time.Millisecond)
 }
 
+func checkValidAdminResponse(t *testing.T, resp *http.Response) {
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("bad admin response: %s", resp.Status)
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	var m AdminMessage
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		t.Fatalf("unmarshall of admin response: %v", err)
+	}
+
+	if time.Since(m.StartTime).Seconds() > 5 {
+		t.Fatalf("service start time too long ago")
+	}
+
+	if m.UUIDGen.NumUUIDs != 268 {
+		t.Fatalf("num uuids: expected %d, actual %d", 268, m.UUIDGen.NumUUIDs)
+	}
+	if m.UUIDGen.NumRequests != 5 {
+		t.Fatalf("num requests: expected %d, actual %d", 5, m.UUIDGen.NumRequests)
+	}
+}
+
 func checkValidResponse(t *testing.T, resp *http.Response, count int) []uuid.UUID {
 	defer resp.Body.Close()
 
@@ -143,6 +173,12 @@ func TestOkay(t *testing.T) {
 			}
 		}
 	}
+
+	resp, err = http.Get("http://localhost:12340/uuid/admin")
+	if err != nil {
+		t.Fatalf("admin get failed: %s", err)
+	}
+	checkValidAdminResponse(t, resp)
 }
 
 func TestBad(t *testing.T) {
