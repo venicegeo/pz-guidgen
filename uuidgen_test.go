@@ -15,7 +15,7 @@ import (
 
 // @TODO: need to automate call to setup() and/or kill thread after each test
 func setup(port string, debug bool) {
-	s := fmt.Sprintf("-host localhost -port %s", port)
+	s := fmt.Sprintf("-discovery http://localhost:3000 -port %s", port)
 	if debug {
 		s += " -debug"
 	}
@@ -183,13 +183,13 @@ func TestOkay(t *testing.T) {
 }
 
 func TestBad(t *testing.T) {
-	setup("12341", false)
+	setup("12350", false)
 
 	var resp *http.Response
 	var err error
 
 	// bad url
-	resp, err = http.Post("http://localhost:12341/guid", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/guid", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -198,7 +198,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12341/uuid?count=-1", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/uuid?count=-1", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -207,7 +207,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12341/uuid?count=256", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/uuid?count=256", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -216,7 +216,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// bad count
-	resp, err = http.Post("http://localhost:12341/uuid?count=fortyleven", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/uuid?count=fortyleven", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -226,7 +226,7 @@ func TestBad(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	setup("12342", true)
+	setup("12351", true)
 
 	var resp *http.Response
 	var err error
@@ -234,14 +234,14 @@ func TestDebug(t *testing.T) {
 
 	values := []string{}
 
-	resp, err = http.Post("http://localhost:12342/uuid", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12351/uuid", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
 	tmp = checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = http.Post("http://localhost:12342/uuid?count=3", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12351/uuid?count=3", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}

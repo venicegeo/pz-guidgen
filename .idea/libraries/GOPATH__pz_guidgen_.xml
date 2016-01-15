@@ -39,8 +39,10 @@
       <root url="file://$PROJECT_DIR$/../../FiloSottile/gvt/.git" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/go/types/testdata" />
       <root url="file://$PROJECT_DIR$/../../pmezard/go-difflib/.git" />
+      <root url="file://$PROJECT_DIR$/../pz-alerter/.idea" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/go/pointer/testdata" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/cmd/bundle/testdata" />
+      <root url="file://$PROJECT_DIR$/../pz-alerter/.git" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/oracle/testdata" />
       <root url="file://$PROJECT_DIR$/../../davecgh/go-spew/spew/testdata" />
       <root url="file://$PROJECT_DIR$/../../gorilla/mux/.git" />

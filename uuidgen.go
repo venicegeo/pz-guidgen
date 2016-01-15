@@ -83,16 +83,25 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	numRequests++
 
 	// @TODO ignore any failure here
-	piazza.SendLogMessage("uuidgen", "0.0.0.0", piazza.SeverityInfo, "uuid generator")
+	piazza.SendLogMessage("uuidgen", "0.0.0.0", piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
 
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	w.Write(bytes)
 }
 
-func runUUIDServer(host string, port string, debug bool) error {
+func runUUIDServer(discoveryUrl string, port string, debug bool) error {
 
 	debugMode = debug
+
+	myAddress := fmt.Sprintf("%s:%s", "localhost", port)
+	myUrl := fmt.Sprintf("http://%s/log", myAddress)
+
+	piazza.RegistryInit(discoveryUrl)
+	err := piazza.RegisterService("pz-uuidgen", "core-service", myUrl)
+	if err != nil {
+		return err
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/uuid/admin", handleAdminGet).
@@ -100,8 +109,8 @@ func runUUIDServer(host string, port string, debug bool) error {
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
 
-	server := &http.Server{Addr: host + ":" + port, Handler: piazza.HttpLogHandler(r)}
-	err := server.ListenAndServe()
+	server := &http.Server{Addr: myAddress, Handler: piazza.HttpLogHandler(r)}
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -112,15 +121,15 @@ func runUUIDServer(host string, port string, debug bool) error {
 }
 
 func app() int {
-	var host = flag.String("host", "localhost", "host name")
-	var port = flag.String("port", "12340", "port number")
+	var discovery = flag.String("discovery", "http://localhost:3000", "URL of pz-discovery")
+	var port = flag.String("port", "12341", "port number for pz-uuidgen")
 	var debug = flag.Bool("debug", false, "use debug mode")
 
 	flag.Parse()
 
-	log.Printf("starting: host=%s, port=%s, debug=%t", *host, *port, *debug)
+	log.Printf("starting: discovery=%s, port=%s, debug=%t", *discovery, *port, *debug)
 
-	err := runUUIDServer(*host, *port, *debug)
+	err := runUUIDServer(*discovery, *port, *debug)
 	if err != nil {
 		fmt.Print(err)
 		return 1
