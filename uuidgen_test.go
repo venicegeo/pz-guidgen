@@ -44,7 +44,7 @@ func checkValidAdminResponse(t *testing.T, resp *http.Response) {
 		t.Fatalf("service start time too long ago: %f", time.Since(m.StartTime).Seconds())
 	}
 
-	uuidgen := m.UuidGen
+	uuidgen := m.Uuidgen
 	if uuidgen.NumUUIDs != 268 {
 		t.Fatalf("num uuids: expected %d, actual %d", 268, uuidgen.NumUUIDs)
 	}

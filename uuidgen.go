@@ -25,8 +25,8 @@ var startTime = time.Now()
 
 func handleAdminGet(w http.ResponseWriter, r *http.Request) {
 
-	uuidgen := piazza.AdminResponse_UuidGen{NumRequests: numRequests, NumUUIDs: numUUIDs}
-	m := piazza.AdminResponse{StartTime: startTime, UuidGen: &uuidgen}
+	uuidgen := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
+	m := piazza.AdminResponse{StartTime: startTime, Uuidgen: &uuidgen}
 
 	data, err := json.Marshal(m)
 	if err != nil {
@@ -83,22 +83,22 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	numRequests++
 
 	// @TODO ignore any failure here
-	piazza.SendLogMessage("uuidgen", "0.0.0.0", piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
+	piazza.Log("uuidgen", "0.0.0.0", piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", piazza.ContentTypeJSON)
 
 	w.Write(bytes)
 }
 
-func runUUIDServer(discoveryUrl string, port string, debug bool) error {
+func runUUIDServer(discoveryURL string, port string, debug bool) error {
 
 	debugMode = debug
 
 	myAddress := fmt.Sprintf("%s:%s", "localhost", port)
-	myUrl := fmt.Sprintf("http://%s/log", myAddress)
+	myURL := fmt.Sprintf("http://%s/log", myAddress)
 
-	piazza.RegistryInit(discoveryUrl)
-	err := piazza.RegisterService("pz-uuidgen", "core-service", myUrl)
+	piazza.RegistryInit(discoveryURL)
+	err := piazza.RegisterService("pz-uuidgen", "core-service", myURL)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func runUUIDServer(discoveryUrl string, port string, debug bool) error {
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
 
-	server := &http.Server{Addr: myAddress, Handler: piazza.HttpLogHandler(r)}
+	server := &http.Server{Addr: myAddress, Handler: piazza.ServerLogHandler(r)}
 	err = server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
