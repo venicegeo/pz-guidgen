@@ -82,8 +82,11 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	numUUIDs += count
 	numRequests++
 
+	// @TODO ignore any failure here
 	piazza.SendLogMessage("uuidgen", "0.0.0.0", piazza.SeverityInfo, "uuid generator")
 
+	w.Header().Set("Content-Type", "application/json")
+	
 	w.Write(bytes)
 }
 
