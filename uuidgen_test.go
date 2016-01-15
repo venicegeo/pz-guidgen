@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/pborman/uuid"
+	assert "github.com/stretchr/testify/assert"
+	piazza "github.com/venicegeo/pz-gocommon"
+	pztesting "github.com/venicegeo/pz-gocommon/testing"
 	"io/ioutil"
-	"net/http"
+	http "net/http"
 	"testing"
 	"time"
-	"fmt"
 )
 
 // @TODO: need to automate call to setup() and/or kill thread after each test
@@ -25,30 +28,28 @@ func setup(port string, debug bool) {
 func checkValidAdminResponse(t *testing.T, resp *http.Response) {
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("bad admin response: %s", resp.Status)
-	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "bad admin response")
 
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
+	data := pztesting.HttpBody(t, resp)
+	t.Log(string(data))
 
-	var m AdminMessage
-	err = json.Unmarshal(data, &m)
+	var m piazza.AdminResponse
+
+	err := json.Unmarshal(data, &m)
 	if err != nil {
 		t.Fatalf("unmarshall of admin response: %v", err)
 	}
 
 	if time.Since(m.StartTime).Seconds() > 5 {
-		t.Fatalf("service start time too long ago")
+		t.Fatalf("service start time too long ago: %f", time.Since(m.StartTime).Seconds())
 	}
 
-	if m.UUIDGen.NumUUIDs != 268 {
-		t.Fatalf("num uuids: expected %d, actual %d", 268, m.UUIDGen.NumUUIDs)
+	uuidgen := m.UuidGen
+	if uuidgen.NumUUIDs != 268 {
+		t.Fatalf("num uuids: expected %d, actual %d", 268, uuidgen.NumUUIDs)
 	}
-	if m.UUIDGen.NumRequests != 5 {
-		t.Fatalf("num requests: expected %d, actual %d", 5, m.UUIDGen.NumRequests)
+	if uuidgen.NumRequests != 5 {
+		t.Fatalf("num requests: expected %d, actual %d", 5, uuidgen.NumRequests)
 	}
 }
 

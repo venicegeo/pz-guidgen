@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/pborman/uuid"
+	piazza "github.com/venicegeo/pz-gocommon"
 	"log"
 	"net/http"
 	"os"
@@ -22,18 +23,10 @@ var numUUIDs = 0
 
 var startTime = time.Now()
 
-type AdminUUIDGenMessage struct {
-	NumRequests int `json:"num_requests"`
-	NumUUIDs    int `json:"num_uuids"`
-}
-
-type AdminMessage struct {
-	StartTime time.Time           `json:"starttime"`
-	UUIDGen   AdminUUIDGenMessage `json:"uuidgen"`
-}
-
 func handleAdminGet(w http.ResponseWriter, r *http.Request) {
-	m := AdminMessage{StartTime: startTime, UUIDGen: AdminUUIDGenMessage{NumRequests: numRequests, NumUUIDs: numUUIDs}}
+
+	uuidgen := piazza.AdminResponse_UuidGen{NumRequests: numRequests, NumUUIDs: numUUIDs}
+	m := piazza.AdminResponse{StartTime: startTime, UuidGen: &uuidgen}
 
 	data, err := json.Marshal(m)
 	if err != nil {
@@ -89,14 +82,9 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	numUUIDs += count
 	numRequests++
 
-	w.Write(bytes)
-}
+	piazza.SendLogMessage("uuidgen", "0.0.0.0", piazza.SeverityInfo, "uuid generator")
 
-func Log(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
+	w.Write(bytes)
 }
 
 func runUUIDServer(host string, port string, debug bool) error {
@@ -109,7 +97,7 @@ func runUUIDServer(host string, port string, debug bool) error {
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
 
-	server := &http.Server{Addr: host + ":" + port, Handler: Log(r)}
+	server := &http.Server{Addr: host + ":" + port, Handler: piazza.HttpLogHandler(r)}
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
