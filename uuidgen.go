@@ -98,7 +98,7 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 
 	debugMode = debug
 
-	myAddress := fmt.Sprintf("%s:%s", "localhost", port)
+	myAddress := fmt.Sprintf(":%s", port)
 	myURL := fmt.Sprintf("http://%s/log", myAddress)
 
 	piazza.RegistryInit(discoveryURL)
