@@ -129,9 +129,9 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 func app() int {
   var defaultPort = os.Getenv("PORT")
   if defaultPort == "" {
-    defaultPort = "1234"
+    defaultPort = "12340"
   }
-	var discovery = flag.String("discovery", "http://pz-discover.cf.piazzageo.io", "URL of pz-discovery")
+	var discovery = flag.String("discovery", "http://localhost:3000", "URL of pz-discovery")
 	var port = flag.String("port", defaultPort, "port number for pz-uuidgen")
 	var debug = flag.Bool("debug", false, "use debug mode")
 
