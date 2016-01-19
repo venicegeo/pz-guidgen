@@ -23,6 +23,10 @@ var numUUIDs = 0
 
 var startTime = time.Now()
 
+func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprintf(w, "ok")
+}
+
 func handleAdminGet(w http.ResponseWriter, r *http.Request) {
 
 	uuidgen := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
@@ -108,6 +112,8 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 		Methods("GET")
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
+  r.HandleFunc("/", handleHealthCheck).
+    Methods("GET")
 
 	server := &http.Server{Addr: myAddress, Handler: piazza.ServerLogHandler(r)}
 	err = server.ListenAndServe()
