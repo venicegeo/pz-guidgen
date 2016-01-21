@@ -94,18 +94,15 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	w.Write(bytes)
 }
 
-func runUUIDServer(discoveryURL string, port string, debug bool) error {
+func runUUIDServer(serviceAddress string, discoverAddress string, debug bool) error {
 
 	debugMode = debug
 
-	myAddress := fmt.Sprintf(":%s", port)
-	myURL := fmt.Sprintf("http://%s/log", myAddress)
-
-	piazza.RegistryInit(discoveryURL)
-	err := piazza.RegisterService("pz-uuidgen", "core-service", myURL)
-	if err != nil {
-		return err
-	}
+//////////////	piazza.RegistryInit("http://" + discoverAddress)
+	//	err := piazza.RegisterService("pz-uuidgen", "core-service", myURL)
+	//	if err != nil {
+	//		return err
+	//	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/uuid/admin", handleAdminGet).
@@ -115,8 +112,8 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 	r.HandleFunc("/", handleHealthCheck).
 		Methods("GET")
 
-	server := &http.Server{Addr: myAddress, Handler: piazza.ServerLogHandler(r)}
-	err = server.ListenAndServe()
+	server := &http.Server{Addr: serviceAddress, Handler: piazza.ServerLogHandler(r)}
+	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -127,27 +124,27 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 }
 
 func app() int {
-	var defaultPort = os.Getenv("PORT")
-	if defaultPort == "" {
-		defaultPort = "12340"
-	}
-	var discovery = flag.String("discovery", "http://localhost:3000", "URL of pz-discovery")
-	var port = flag.String("port", defaultPort, "port number for pz-uuidgen")
-	var debug = flag.Bool("debug", false, "use debug mode")
 
-	flag.Parse()
+	var err error
 
-	log.Printf("starting: discovery=%s, port=%s, debug=%t", *discovery, *port, *debug)
-
-	err := runUUIDServer(*discovery, *port, *debug)
+	// handles the command line flags, finds the discover service, registers us,
+	// and figures out our own server address
+	svc, err := piazza.NewDiscoverService(os.Args[0], "localhost:12340", "localhost:3000")
 	if err != nil {
-		fmt.Print(err)
+		log.Print(err)
+		return 1
+	}
+
+	err = runUUIDServer(svc.BindTo, svc.DiscoverAddress, *svc.DebugFlag)
+	if err != nil {
+		log.Print(err)
 		return 1
 	}
 
 	// not reached
 	return 1
 }
+
 
 func main2(cmd string) int {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
