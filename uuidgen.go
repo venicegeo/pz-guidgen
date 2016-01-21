@@ -98,12 +98,6 @@ func runUUIDServer(serviceAddress string, discoverAddress string, debug bool) er
 
 	debugMode = debug
 
-//////////////	piazza.RegistryInit("http://" + discoverAddress)
-	//	err := piazza.RegisterService("pz-uuidgen", "core-service", myURL)
-	//	if err != nil {
-	//		return err
-	//	}
-
 	r := mux.NewRouter()
 	r.HandleFunc("/uuid/admin", handleAdminGet).
 		Methods("GET")
@@ -129,7 +123,7 @@ func app() int {
 
 	// handles the command line flags, finds the discover service, registers us,
 	// and figures out our own server address
-	svc, err := piazza.NewDiscoverService(os.Args[0], "localhost:12340", "localhost:3000")
+	svc, err := piazza.NewDiscoverService("pz-uuidgen", "localhost:12340", "localhost:3000")
 	if err != nil {
 		log.Print(err)
 		return 1
@@ -144,7 +138,6 @@ func app() int {
 	// not reached
 	return 1
 }
-
 
 func main2(cmd string) int {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)

@@ -83,8 +83,6 @@ func checkValidResponse(t *testing.T, resp *http.Response, count int) []uuid.UUI
 		if values[i] == nil {
 			t.Fatalf("returned uuid has invalid format: %v", values)
 		}
-
-		//t.Log(values[i])
 	}
 
 	return values
