@@ -24,7 +24,7 @@ var numUUIDs = 0
 var startTime = time.Now()
 
 func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
-  fmt.Fprintf(w, "ok")
+	fmt.Fprintf(w, "Hi. I'm pz-uuidgen.")
 }
 
 func handleAdminGet(w http.ResponseWriter, r *http.Request) {
@@ -112,8 +112,8 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 		Methods("GET")
 	r.HandleFunc("/uuid", handleUUIDService).
 		Methods("POST")
-  r.HandleFunc("/", handleHealthCheck).
-    Methods("GET")
+	r.HandleFunc("/", handleHealthCheck).
+		Methods("GET")
 
 	server := &http.Server{Addr: myAddress, Handler: piazza.ServerLogHandler(r)}
 	err = server.ListenAndServe()
@@ -127,10 +127,10 @@ func runUUIDServer(discoveryURL string, port string, debug bool) error {
 }
 
 func app() int {
-  var defaultPort = os.Getenv("PORT")
-  if defaultPort == "" {
-    defaultPort = "12340"
-  }
+	var defaultPort = os.Getenv("PORT")
+	if defaultPort == "" {
+		defaultPort = "12340"
+	}
 	var discovery = flag.String("discovery", "http://localhost:3000", "URL of pz-discovery")
 	var port = flag.String("port", defaultPort, "port number for pz-uuidgen")
 	var debug = flag.Bool("debug", false, "use debug mode")
