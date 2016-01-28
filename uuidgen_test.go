@@ -14,15 +14,20 @@ import (
 )
 
 // @TODO: need to automate call to setup() and/or kill thread after each test
-func setup(port string, debug bool) {
+func setup(t *testing.T, port string, debug bool) {
 	s := fmt.Sprintf("-server localhost:%s -discover localhost:3000", port) //pz-discover.cf.piazzageo.io
 	if debug {
 		s += " -debug"
 	}
 
-	go main2(s)
+	done := make(chan bool, 1)
+	go main2(s, done)
+	<-done
 
-	time.Sleep(250 * time.Millisecond)
+	err := pzService.WaitForService(pzService.Name, 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func checkValidAdminResponse(t *testing.T, resp *http.Response) {
@@ -116,7 +121,7 @@ func checkValidDebugResponse(t *testing.T, resp *http.Response, count int) []str
 }
 
 func TestOkay(t *testing.T) {
-	setup("12340", false)
+	setup(t, "12340", false)
 
 	var resp *http.Response
 	var err error
@@ -189,7 +194,7 @@ func TestOkay(t *testing.T) {
 }
 
 func TestBad(t *testing.T) {
-	setup("12350", false)
+	setup(t, "12350", false)
 
 	var resp *http.Response
 	var err error
@@ -232,7 +237,7 @@ func TestBad(t *testing.T) {
 }
 
 func TestDebug(t *testing.T) {
-	setup("12351", true)
+	setup(t, "12351", true)
 
 	var resp *http.Response
 	var err error
