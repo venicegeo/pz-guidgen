@@ -14,7 +14,8 @@ import (
 	"time"
 )
 
-var debugMode = false
+var pzService *piazza.PzService
+
 var debugCounter = 0
 
 var numRequests = 0
@@ -58,7 +59,7 @@ func handleUUIDService(c *gin.Context) {
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if debugMode {
+		if pzService.Debug {
 			uuids[i] = fmt.Sprintf("%d", debugCounter)
 			debugCounter++
 		} else {
@@ -73,19 +74,17 @@ func handleUUIDService(c *gin.Context) {
 	numRequests++
 
 	// @TODO ignore any failure here
-	piazza.Log("uuidgen", "0.0.0.0", piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
+	pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
 
 	c.IndentedJSON(http.StatusOK, data)
 }
 
-func runUUIDServer(serviceAddress string, discoverAddress string, debug bool) error {
+func runUUIDServer() error {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 	//router.Use(gin.Logger())
 	//router.Use(gin.Recovery())
-
-	debugMode = debug
 
 	router.GET("/uuid/admin", func(c *gin.Context) { handleAdminGet(c) })
 
@@ -93,7 +92,7 @@ func runUUIDServer(serviceAddress string, discoverAddress string, debug bool) er
 
 	router.GET("/", func(c *gin.Context) { handleHealthCheck(c) })
 
-	return router.Run(serviceAddress)
+	return router.Run(pzService.Address)
 }
 
 func app() int {
@@ -102,13 +101,19 @@ func app() int {
 
 	// handles the command line flags, finds the discover service, registers us,
 	// and figures out our own server address
-	svc, err := piazza.NewDiscoverService("pz-uuidgen", "localhost:12340", "localhost:3000")
+	serviceAddress, discoverAddress, debug, err := piazza.NewDiscoverService("pz-uuidgen", "localhost:12340", "localhost:3000")
 	if err != nil {
 		log.Print(err)
 		return 1
 	}
 
-	err = runUUIDServer(svc.BindTo, svc.DiscoverAddress, *svc.DebugFlag)
+	pzService, err = piazza.NewPzService("pz-logger", serviceAddress, discoverAddress, debug)
+	if err != nil {
+		log.Fatal(err)
+		return 1
+	}
+
+	err = runUUIDServer()
 	if err != nil {
 		log.Print(err)
 		return 1

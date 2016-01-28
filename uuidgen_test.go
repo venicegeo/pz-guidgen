@@ -178,6 +178,14 @@ func TestOkay(t *testing.T) {
 		t.Fatalf("admin get failed: %s", err)
 	}
 	checkValidAdminResponse(t, resp)
+
+	s, err := pzService.GetUuid()
+	if err != nil {
+		t.Fatalf("piazza.Log() failed: %s", err)
+	}
+	if s == "" {
+		t.Fatalf("GetUuid failed - returned empty string")
+	}
 }
 
 func TestBad(t *testing.T) {
