@@ -7,6 +7,7 @@ import (
 	assert "github.com/stretchr/testify/assert"
 	piazza "github.com/venicegeo/pz-gocommon"
 	pztesting "github.com/venicegeo/pz-gocommon/testing"
+	"bytes"
 	"io/ioutil"
 	http "net/http"
 	"testing"
@@ -130,7 +131,7 @@ func TestOkay(t *testing.T) {
 	values := []uuid.UUID{}
 
 	// default url
-	resp, err = http.Post("http://localhost:12340/uuid", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12340/v1/uuids", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -138,7 +139,7 @@ func TestOkay(t *testing.T) {
 	values = append(values, tmp...)
 
 	// url with count=1
-	resp, err = http.Post("http://localhost:12340/uuid?count=1", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12340/v1/uuids?count=1", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -146,7 +147,7 @@ func TestOkay(t *testing.T) {
 	values = append(values, tmp...)
 
 	// ignore other keywords
-	resp, err = http.Post("http://localhost:12340/uuid?count=1&foo=bar", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12340/v1/uuids?count=1&foo=bar", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -154,7 +155,7 @@ func TestOkay(t *testing.T) {
 	values = append(values, tmp...)
 
 	// url with count=10
-	resp, err = http.Post("http://localhost:12340/uuid?count=10", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12340/v1/uuids?count=10", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -162,7 +163,7 @@ func TestOkay(t *testing.T) {
 	values = append(values, tmp...)
 
 	// url with count=255
-	resp, err = http.Post("http://localhost:12340/uuid?count=255", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12340/v1/uuids?count=255", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -178,7 +179,7 @@ func TestOkay(t *testing.T) {
 		}
 	}
 
-	resp, err = http.Get("http://localhost:12340/uuid/admin")
+	resp, err = http.Get("http://localhost:12340/v1/admin/stats")
 	if err != nil {
 		t.Fatalf("admin get failed: %s", err)
 	}
@@ -200,7 +201,7 @@ func TestBad(t *testing.T) {
 	var err error
 
 	// bad url
-	resp, err = http.Post("http://localhost:12350/guid", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/v1/guid", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -209,7 +210,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12350/uuid?count=-1", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/v1/uuids?count=-1", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -218,7 +219,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12350/uuid?count=256", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/v1/uuids?count=256", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -227,7 +228,7 @@ func TestBad(t *testing.T) {
 	}
 
 	// bad count
-	resp, err = http.Post("http://localhost:12350/uuid?count=fortyleven", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12350/v1/uuids?count=fortyleven", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -245,14 +246,14 @@ func TestDebug(t *testing.T) {
 
 	values := []string{}
 
-	resp, err = http.Post("http://localhost:12351/uuid", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12351/v1/uuids", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
 	tmp = checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = http.Post("http://localhost:12351/uuid?count=3", "text/plain", nil)
+	resp, err = http.Post("http://localhost:12351/v1/uuids?count=3", "text/plain", nil)
 	if err != nil {
 		t.Fatalf("post failed: %s", err)
 	}
@@ -262,4 +263,51 @@ func TestDebug(t *testing.T) {
 	if values[0] != "0" || values[1] != "1" || values[2] != "2" || values[3] != "3" {
 		t.Fatalf("invalid debug uuids returned: %v", values)
 	}
+
+	///
+
+	resp, err = http.Get("http://localhost:12351/v1/admin/settings")
+	if err != nil {
+		t.Fatalf("admin settings get failed: %s", err)
+	}
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	sm := map[string]string{}
+	err = json.Unmarshal(data, &sm)
+	if err != nil {
+		t.Fatalf("admin settings get failed: %s", err)
+	}
+	if sm["debug"] != "false" {
+		t.Error("settings get had invalid response")
+	}
+
+	m := map[string]string{"debug":"true"}
+	b, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("admin settings %s", err)
+	}
+	resp, err = http.Post("http://localhost:12351/v1/admin/settings", "application/json", bytes.NewBuffer(b))
+	if err != nil {
+		t.Fatalf("admin settings post failed: %s", err)
+	}
+
+	resp, err = http.Get("http://localhost:12351/v1/admin/settings")
+	if err != nil {
+		t.Fatalf("admin settings get failed: %s", err)
+	}
+	data, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	sm = map[string]string{}
+	err = json.Unmarshal(data, &sm)
+	if err != nil {
+		t.Fatalf("admin settings get failed: %s", err)
+	}
+	if sm["debug"] != "true" {
+		t.Error("settings get had invalid response")
+	}
+
 }

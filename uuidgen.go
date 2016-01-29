@@ -23,11 +23,13 @@ var numUUIDs = 0
 
 var startTime = time.Now()
 
-func handleHealthCheck(c *gin.Context) {
+var debugMode bool
+
+func handleGetRoot(c *gin.Context) {
 	c.String(http.StatusOK, "Hi. I'm pz-uuidgen.")
 }
 
-func handleAdminGet(c *gin.Context) {
+func handleGetAdminStats(c *gin.Context) {
 	respUuid := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
 	resp := piazza.AdminResponse{StartTime: startTime, Uuidgen: &respUuid}
 
@@ -36,7 +38,7 @@ func handleAdminGet(c *gin.Context) {
 
 // request body is ignored
 // we allow a count of zero, for testing
-func handleUUIDService(c *gin.Context) {
+func handlePostUuids(c *gin.Context) {
 
 	var count int
 	var err error
@@ -79,6 +81,56 @@ func handleUUIDService(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, data)
 }
 
+func handleGetAdminSettings(c *gin.Context) {
+	s := "false"
+	if debugMode {
+		s = "true"
+	}
+	m := map[string]string{"debug": s}
+	c.JSON(http.StatusOK, m)
+}
+
+func handlePostAdminSettings(c *gin.Context) {
+	m := map[string]string{}
+	err := c.BindJSON(&m)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	for k, v := range m {
+		switch k {
+		case "debug":
+			switch v {
+			case "true":
+				debugMode = true
+				break
+			case "false":
+				debugMode = false
+			default:
+				c.String(http.StatusBadRequest, "Illegal value for 'debug': %s", v)
+				return
+			}
+		default:
+			c.String(http.StatusBadRequest, "Unknown parameter: %s", k)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, m)
+}
+
+func handlePostAdminShutdown(c *gin.Context) {
+	var reason string
+	err := c.BindJSON(&reason)
+	if err != nil {
+		c.String(http.StatusBadRequest, "no reason supplied")
+		return
+	}
+	pzService.Log(piazza.SeverityFatal, "Shutdown requested: "+reason)
+
+	// TODO: need a graceful shutdown method
+	os.Exit(0)
+}
+
 func runUUIDServer() error {
 
 	gin.SetMode(gin.ReleaseMode)
@@ -86,11 +138,16 @@ func runUUIDServer() error {
 	//router.Use(gin.Logger())
 	//router.Use(gin.Recovery())
 
-	router.GET("/uuid/admin", func(c *gin.Context) { handleAdminGet(c) })
+	router.GET("/", func(c *gin.Context) { handleGetRoot(c) })
 
-	router.POST("/uuid", func(c *gin.Context) { handleUUIDService(c) })
+	router.POST("/v1/uuids", func(c *gin.Context) { handlePostUuids(c) })
 
-	router.GET("/", func(c *gin.Context) { handleHealthCheck(c) })
+	router.GET("/v1/admin/stats", func(c *gin.Context) { handleGetAdminStats(c) })
+
+	router.GET("/v1/admin/settings", func(c *gin.Context) { handleGetAdminSettings(c) })
+	router.POST("/v1/admin/settings", func(c *gin.Context) { handlePostAdminSettings(c) })
+
+	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
 	return router.Run(pzService.Address)
 }
