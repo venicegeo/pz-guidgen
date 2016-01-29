@@ -1,10 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"log"
@@ -15,7 +14,8 @@ import (
 	"time"
 )
 
-var debugMode = false
+var pzService *piazza.PzService
+
 var debugCounter = 0
 
 var numRequests = 0
@@ -23,50 +23,45 @@ var numUUIDs = 0
 
 var startTime = time.Now()
 
-func handleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi. I'm pz-uuidgen.")
+var debugMode bool
+
+func handleGetRoot(c *gin.Context) {
+	c.String(http.StatusOK, "Hi. I'm pz-uuidgen.")
 }
 
-func handleAdminGet(w http.ResponseWriter, r *http.Request) {
+func handleGetAdminStats(c *gin.Context) {
+	respUuid := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
+	resp := piazza.AdminResponse{StartTime: startTime, Uuidgen: &respUuid}
 
-	uuidgen := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
-	m := piazza.AdminResponse{StartTime: startTime, Uuidgen: &uuidgen}
-
-	data, err := json.Marshal(m)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(data)
+	c.IndentedJSON(http.StatusOK, resp)
 }
 
 // request body is ignored
 // we allow a count of zero, for testing
-func handleUUIDService(w http.ResponseWriter, r *http.Request) {
+func handlePostUuids(c *gin.Context) {
 
 	var count int
 	var err error
 
-	key := r.URL.Query().Get("count")
+	key := c.Query("count")
 	if key == "" {
 		count = 1
 	} else {
 		count, err = strconv.Atoi(key)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("query argument invalid: %s", key), http.StatusBadRequest)
+			c.String(http.StatusBadRequest, "query argument invalid: %s", key)
 			return
 		}
 	}
 
 	if count < 0 || count > 255 {
-		http.Error(w, fmt.Sprintf("query argument out of range: %d", count), http.StatusBadRequest)
+		c.String(http.StatusBadRequest, "query argument out of range: %d", count)
 		return
 	}
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if debugMode {
+		if pzService.Debug {
 			uuids[i] = fmt.Sprintf("%d", debugCounter)
 			debugCounter++
 		} else {
@@ -77,71 +72,117 @@ func handleUUIDService(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]interface{})
 	data["data"] = uuids
 
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("%v", err), http.StatusInternalServerError)
-		return
-	}
-
 	numUUIDs += count
 	numRequests++
 
 	// @TODO ignore any failure here
-	piazza.Log("uuidgen", "0.0.0.0", piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
+	pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
 
-	w.Header().Set("Content-Type", piazza.ContentTypeJSON)
-
-	w.Write(bytes)
+	c.IndentedJSON(http.StatusOK, data)
 }
 
-func runUUIDServer(discoveryURL string, port string, debug bool) error {
+func handleGetAdminSettings(c *gin.Context) {
+	s := "false"
+	if debugMode {
+		s = "true"
+	}
+	m := map[string]string{"debug": s}
+	c.JSON(http.StatusOK, m)
+}
 
-	debugMode = debug
-
-	myAddress := fmt.Sprintf(":%s", port)
-	myURL := fmt.Sprintf("http://%s/log", myAddress)
-
-	piazza.RegistryInit(discoveryURL)
-	err := piazza.RegisterService("pz-uuidgen", "core-service", myURL)
+func handlePostAdminSettings(c *gin.Context) {
+	m := map[string]string{}
+	err := c.BindJSON(&m)
 	if err != nil {
-		return err
+		c.Error(err)
+		return
+	}
+	for k, v := range m {
+		switch k {
+		case "debug":
+			switch v {
+			case "true":
+				debugMode = true
+				break
+			case "false":
+				debugMode = false
+			default:
+				c.String(http.StatusBadRequest, "Illegal value for 'debug': %s", v)
+				return
+			}
+		default:
+			c.String(http.StatusBadRequest, "Unknown parameter: %s", k)
+			return
+		}
+	}
+	c.JSON(http.StatusOK, m)
+}
+
+func handlePostAdminShutdown(c *gin.Context) {
+	var reason string
+	err := c.BindJSON(&reason)
+	if err != nil {
+		c.String(http.StatusBadRequest, "no reason supplied")
+		return
+	}
+	pzService.Log(piazza.SeverityFatal, "Shutdown requested: "+reason)
+
+	// TODO: need a graceful shutdown method
+	os.Exit(0)
+}
+
+func runUUIDServer() error {
+
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	//router.Use(gin.Logger())
+	//router.Use(gin.Recovery())
+
+	router.GET("/", func(c *gin.Context) { handleGetRoot(c) })
+
+	router.POST("/v1/uuids", func(c *gin.Context) { handlePostUuids(c) })
+
+	router.GET("/v1/admin/stats", func(c *gin.Context) { handleGetAdminStats(c) })
+
+	router.GET("/v1/admin/settings", func(c *gin.Context) { handleGetAdminSettings(c) })
+	router.POST("/v1/admin/settings", func(c *gin.Context) { handlePostAdminSettings(c) })
+
+	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
+
+	return router.Run(pzService.Address)
+}
+
+func app(done chan bool) int {
+
+	var err error
+
+	// handles the command line flags, finds the discover service, registers us,
+	// and figures out our own server address
+	serviceAddress, discoverAddress, debug, err := piazza.NewDiscoverService("pz-uuidgen", "localhost:12340", "localhost:3000")
+	if err != nil {
+		log.Print(err)
+		return 1
 	}
 
-	r := mux.NewRouter()
-	r.HandleFunc("/uuid/admin", handleAdminGet).
-		Methods("GET")
-	r.HandleFunc("/uuid", handleUUIDService).
-		Methods("POST")
-	r.HandleFunc("/", handleHealthCheck).
-		Methods("GET")
-
-	server := &http.Server{Addr: myAddress, Handler: piazza.ServerLogHandler(r)}
-	err = server.ListenAndServe()
+	pzService, err = piazza.NewPzService("pz-uuidgen", serviceAddress, discoverAddress, debug)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return 1
 	}
 
-	// not reached
-	return nil
-}
-
-func app() int {
-	var defaultPort = os.Getenv("PORT")
-	if defaultPort == "" {
-		defaultPort = "12340"
-	}
-	var discovery = flag.String("discovery", "http://localhost:3000", "URL of pz-discovery")
-	var port = flag.String("port", defaultPort, "port number for pz-uuidgen")
-	var debug = flag.Bool("debug", false, "use debug mode")
-
-	flag.Parse()
-
-	log.Printf("starting: discovery=%s, port=%s, debug=%t", *discovery, *port, *debug)
-
-	err := runUUIDServer(*discovery, *port, *debug)
+	err = pzService.WaitForService("pz-logger", 1000)
 	if err != nil {
-		fmt.Print(err)
+		log.Fatal(err)
+		return 1
+	}
+
+	if done != nil {
+		done <- true
+	}
+
+	err = runUUIDServer()
+	if err != nil {
+		log.Print(err)
 		return 1
 	}
 
@@ -149,12 +190,13 @@ func app() int {
 	return 1
 }
 
-func main2(cmd string) int {
+func main2(cmd string, done chan bool) int {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	os.Args = strings.Fields("main_tester " + cmd)
-	return app()
+
+	return app(done)
 }
 
 func main() {
-	os.Exit(app())
+	os.Exit(app(nil))
 }
