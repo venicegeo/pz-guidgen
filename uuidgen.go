@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
@@ -10,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -103,9 +101,11 @@ func handlePostAdminSettings(c *gin.Context) {
 			switch v {
 			case "true":
 				debugMode = true
+				pzService.Debug = true
 				break
 			case "false":
 				debugMode = false
+				pzService.Debug = false
 			default:
 				c.String(http.StatusBadRequest, "Illegal value for 'debug': %s", v)
 				return
@@ -131,7 +131,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	os.Exit(0)
 }
 
-func runUUIDServer() error {
+func runUUIDServer(bindTo string) error {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -149,22 +149,26 @@ func runUUIDServer() error {
 
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
-	return router.Run(pzService.Address)
+	return router.Run(bindTo)
 }
 
-func app(done chan bool) int {
+func Main(done chan bool, local bool) int {
 
 	var err error
 
-	// handles the command line flags, finds the discover service, registers us,
-	// and figures out our own server address
-	serviceAddress, discoverAddress, debug, err := piazza.NewDiscoverService("pz-uuidgen", "localhost:12340", "localhost:3000")
+	config, err := piazza.GetConfig("pz-uuidgen", local)
 	if err != nil {
-		log.Print(err)
+		log.Fatal(err)
 		return 1
 	}
 
-	pzService, err = piazza.NewPzService("pz-uuidgen", serviceAddress, discoverAddress, debug)
+	err = config.RegisterServiceWithDiscover()
+	if err != nil {
+		log.Fatal(err)
+		return 1
+	}
+
+	pzService, err = piazza.NewPzService(config, false)
 	if err != nil {
 		log.Fatal(err)
 		return 1
@@ -180,7 +184,7 @@ func app(done chan bool) int {
 		done <- true
 	}
 
-	err = runUUIDServer()
+	err = runUUIDServer(config.BindTo)
 	if err != nil {
 		log.Print(err)
 		return 1
@@ -190,13 +194,7 @@ func app(done chan bool) int {
 	return 1
 }
 
-func main2(cmd string, done chan bool) int {
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	os.Args = strings.Fields("main_tester " + cmd)
-
-	return app(done)
-}
-
 func main() {
-	os.Exit(app(nil))
+	local := piazza.IsLocalConfig()
+	os.Exit(Main(nil, local))
 }
