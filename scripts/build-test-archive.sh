@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -ex
+
 pushd `dirname $0` > /dev/null
 base=$(pwd -P)
 popd > /dev/null
@@ -13,7 +15,7 @@ go get github.com/venicegeo/pz-uuidgen
 
 go get github.com/stretchr/testify/suite
 go get github.com/stretchr/testify/assert
-go test -v github.com/venicegeo/pz-uuidgen
+#go test -v github.com/venicegeo/pz-uuidgen
 
 go install github.com/venicegeo/pz-uuidgen
 
