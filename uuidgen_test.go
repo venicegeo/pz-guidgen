@@ -1,22 +1,19 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon"
-	pztesting "github.com/venicegeo/pz-gocommon/testing"
-	"bytes"
-	"io/ioutil"
-	http "net/http"
+	"net/http"
 	"testing"
 	"time"
 )
 
-
 type UuidGenTester struct {
 	suite.Suite
+
+	client *PzUuidGenClient
 }
 
 func (suite *UuidGenTester) SetupSuite() {
@@ -30,6 +27,8 @@ func (suite *UuidGenTester) SetupSuite() {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	suite.client = NewPzUuidGenClient("localhost:12340")
 }
 
 func (suite *UuidGenTester) TearDownSuite() {
@@ -41,62 +40,21 @@ func TestRunSuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
+func checkValidStatsResponse(t *testing.T, stats *piazza.UuidGenAdminStats) {
 
-func checkValidAdminResponse(t *testing.T, resp *http.Response) {
-	defer resp.Body.Close()
+	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
-	assert.Equal(t, http.StatusOK, resp.StatusCode, "bad admin response")
-
-	data := pztesting.HttpBody(t, resp)
-
-	var m piazza.AdminResponse
-
-	err := json.Unmarshal(data, &m)
-	if err != nil {
-		t.Fatalf("unmarshall of admin response: %v", err)
-	}
-
-	if time.Since(m.StartTime).Seconds() > 5 {
-		t.Fatalf("service start time too long ago: %f", time.Since(m.StartTime).Seconds())
-	}
-
-	uuidgen := m.Uuidgen
-	// TODO
-	if uuidgen.NumUUIDs != 268 && uuidgen.NumUUIDs != 272 {
-		t.Fatalf("num uuids: expected 268/272, actual %d", uuidgen.NumUUIDs)
-	}
-	if uuidgen.NumRequests != 5 && uuidgen.NumRequests != 7 {
-		t.Fatalf("num requests: expected 5/7, actual %d", uuidgen.NumRequests)
-	}
+	assert.True(t, stats.NumUUIDs == 268 || stats.NumUUIDs == 272, "num uuids: expected 268/272, actual %d", stats.NumUUIDs)
+	assert.True(t, stats.NumRequests == 5 || stats.NumRequests == 7, "num requests: expected 5/7, actual %d", stats.NumRequests)
 }
 
-func checkValidResponse(t *testing.T, resp *http.Response, count int) []uuid.UUID {
-	defer resp.Body.Close()
+func checkValidResponse(t *testing.T, resp *piazza.UuidGenResponse, count int) []uuid.UUID {
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("bad post response: %s", resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var data map[string][]string
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		t.Fatalf("unmarshall failed: %s", err)
-	}
-
-	uuids, ok := data["data"]
-	if !ok {
-		t.Fatalf("returned data has invalid data type")
-	}
-
-	if len(uuids) != count {
-		t.Fatalf("returned array wrong size")
-	}
+	assert.Len(t, resp.Data, count)
 
 	values := make([]uuid.UUID, count)
 	for i := 0; i < count; i++ {
-		values[i] = uuid.Parse(uuids[i])
+		values[i] = uuid.Parse(resp.Data[i])
 		if values[i] == nil {
 			t.Fatalf("returned uuid has invalid format: %v", values)
 		}
@@ -105,93 +63,71 @@ func checkValidResponse(t *testing.T, resp *http.Response, count int) []uuid.UUI
 	return values
 }
 
-func checkValidDebugResponse(t *testing.T, resp *http.Response, count int) []string {
-	defer resp.Body.Close()
+func checkValidDebugResponse(t *testing.T, resp *piazza.UuidGenResponse, count int) []string {
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("bad post response: %s", resp.Status)
-	}
+	assert.Len(t, resp.Data, count)
 
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var data map[string][]string
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		t.Fatalf("unmarshall failed: %s", err)
-	}
-
-	uuids, ok := data["data"]
-	if !ok {
-		t.Fatalf("returned data has invalid data type")
-	}
-
-	if len(uuids) != count {
-		t.Fatalf("returned array wrong size")
-	}
-
-	return uuids
+	return resp.Data
 }
 
 func (suite *UuidGenTester) TestOkay() {
 	t := suite.T()
+	assert := assert.New(t)
 
-	var resp *http.Response
+	var resp *piazza.UuidGenResponse
 	var err error
 	var tmp []uuid.UUID
 
 	values := []uuid.UUID{}
 
+	var client = suite.client
+
 	//////////////////////
 	{
-		m := map[string]string{"debug":"false"}
-		b, err := json.Marshal(m)
-		if err != nil {
-			t.Fatalf("admin settings %s", err)
-		}
-		resp, err = http.Post("http://localhost:12340/v1/admin/settings", "application/json", bytes.NewBuffer(b))
-		if err != nil {
-			t.Fatalf("admin settings post failed: %s", err)
-		}
+		settings, err := client.GetFromAdminSettings()
+		assert.NoError(err, "GetFromAdminSettings")
+		assert.False(settings.Debug, "settings.Debug")
+
+		settings.Debug = true
+		err = client.PostToAdminSettings(settings)
+		assert.NoError(err, "PostToAdminSettings")
+
+		settings, err = client.GetFromAdminSettings()
+		assert.NoError(err, "GetFromAdminSettings")
+		assert.True(settings.Debug, "settings.Debug")
+
+		settings.Debug = false
+		err = client.PostToAdminSettings(settings)
+		assert.NoError(err, "PostToAdminSettings")
+
+		settings, err = client.GetFromAdminSettings()
+		assert.NoError(err, "GetFromAdminSettings")
+		assert.False(settings.Debug, "settings.Debug")
 	}
 	////////////////////////
 
-	// default url
-	resp, err = http.Post("http://localhost:12340/v1/uuids", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(1)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	// url with count=1
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=1", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(1)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	// ignore other keywords
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=1&foo=bar", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(1)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	// url with count=10
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=10", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(10)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 10)
 	values = append(values, tmp...)
 
-	// url with count=255
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=255", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(255)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 255)
 	values = append(values, tmp...)
 
@@ -204,21 +140,14 @@ func (suite *UuidGenTester) TestOkay() {
 		}
 	}
 
-	resp, err = http.Get("http://localhost:12340/v1/admin/stats")
-	if err != nil {
-		t.Fatalf("admin get failed: %s", err)
-	}
-	checkValidAdminResponse(t, resp)
+	stats, err := client.GetFromAdminStats()
+	assert.NoError(err, "PostToUuids")
+	checkValidStatsResponse(t, stats)
 
 	s, err := pzService.GetUuid()
-	if err != nil {
-		t.Fatalf("piazza.Log() failed: %s", err)
-	}
-	if s == "" {
-		t.Fatalf("GetUuid failed - returned empty string")
-	}
+	assert.NoError(err, "pzService.GetUuid")
+	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 }
-
 
 func (suite *UuidGenTester) TestBad() {
 	t := suite.T()
@@ -265,74 +194,36 @@ func (suite *UuidGenTester) TestBad() {
 
 func (suite *UuidGenTester) TestDebug() {
 	t := suite.T()
+	assert := assert.New(t)
+	var client = suite.client
 
-	var resp *http.Response
+	var resp *piazza.UuidGenResponse
 	var err error
 	var tmp []string
 
 	values := []string{}
 
 	/////////////////
-	resp, err = http.Get("http://localhost:12340/v1/admin/settings")
-	if err != nil {
-		t.Fatalf("admin settings get failed: %s", err)
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	sm := map[string]string{}
-	err = json.Unmarshal(data, &sm)
-	if err != nil {
-		t.Fatalf("admin settings get failed: %s", err)
-	}
-	if sm["debug"] != "false" {
-		t.Error("settings get had invalid response")
-	}
+	settings := &piazza.UuidGenAdminSettings{Debug: true}
+	err = client.PostToAdminSettings(settings)
+	assert.NoError(err, "PostToAdminSettings")
 
-	m := map[string]string{"debug":"true"}
-	b, err := json.Marshal(m)
-	if err != nil {
-		t.Fatalf("admin settings %s", err)
-	}
-	resp, err = http.Post("http://localhost:12340/v1/admin/settings", "application/json", bytes.NewBuffer(b))
-	if err != nil {
-		t.Fatalf("admin settings post failed: %s", err)
-	}
-
-	resp, err = http.Get("http://localhost:12340/v1/admin/settings")
-	if err != nil {
-		t.Fatalf("admin settings get failed: %s", err)
-	}
-	data, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	sm = map[string]string{}
-	err = json.Unmarshal(data, &sm)
-	if err != nil {
-		t.Fatalf("admin settings get failed: %s", err)
-	}
-	if sm["debug"] != "true" {
-		t.Error("settings get had invalid response")
-	}
-	/////////////////
-
-	resp, err = http.Post("http://localhost:12340/v1/uuids", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(1)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=3", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
+	resp, err = client.PostToUuids(3)
+	assert.NoError(err, "PostToUuids")
 	tmp = checkValidDebugResponse(t, resp, 3)
 	values = append(values, tmp...)
 
 	if values[0] != "0" || values[1] != "1" || values[2] != "2" || values[3] != "3" {
 		t.Fatalf("invalid debug uuids returned: %v", values)
 	}
+
+	// set it back
+	settings = &piazza.UuidGenAdminSettings{Debug: false}
+	err = client.PostToAdminSettings(settings)
+	assert.NoError(err, "PostToAdminSettings")
 }
