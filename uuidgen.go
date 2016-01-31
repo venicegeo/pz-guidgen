@@ -28,10 +28,8 @@ func handleGetRoot(c *gin.Context) {
 }
 
 func handleGetAdminStats(c *gin.Context) {
-	respUuid := piazza.AdminResponseUuidgen{NumRequests: numRequests, NumUUIDs: numUUIDs}
-	resp := piazza.AdminResponse{StartTime: startTime, Uuidgen: &respUuid}
-
-	c.IndentedJSON(http.StatusOK, resp)
+	stats := piazza.UuidGenAdminStats{StartTime: startTime, NumRequests: numRequests, NumUUIDs: numUUIDs}
+	c.IndentedJSON(http.StatusOK, stats)
 }
 
 // request body is ignored
@@ -80,42 +78,20 @@ func handlePostUuids(c *gin.Context) {
 }
 
 func handleGetAdminSettings(c *gin.Context) {
-	s := "false"
-	if debugMode {
-		s = "true"
-	}
-	m := map[string]string{"debug": s}
-	c.JSON(http.StatusOK, m)
+	s := piazza.LoggerAdminSettings{Debug: debugMode}
+	c.JSON(http.StatusOK, s)
 }
 
 func handlePostAdminSettings(c *gin.Context) {
-	m := map[string]string{}
-	err := c.BindJSON(&m)
+	settings := piazza.LoggerAdminSettings{}
+	err := c.BindJSON(&settings)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	for k, v := range m {
-		switch k {
-		case "debug":
-			switch v {
-			case "true":
-				debugMode = true
-				pzService.Debug = true
-				break
-			case "false":
-				debugMode = false
-				pzService.Debug = false
-			default:
-				c.String(http.StatusBadRequest, "Illegal value for 'debug': %s", v)
-				return
-			}
-		default:
-			c.String(http.StatusBadRequest, "Unknown parameter: %s", k)
-			return
-		}
-	}
-	c.JSON(http.StatusOK, m)
+	debugMode = settings.Debug
+	pzService.Debug = settings.Debug
+	c.String(http.StatusOK, "")
 }
 
 func handlePostAdminShutdown(c *gin.Context) {
