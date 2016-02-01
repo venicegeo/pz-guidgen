@@ -4,5 +4,5 @@ applications:
   memory: 512M
   instances: 1
   timeout: 80
-  command: ./pz-uuidgen --discovery http://pz-discover.cf.piazzageo.io
+  command: ./pz-uuidgen
   buildpack: binary_buildpack
