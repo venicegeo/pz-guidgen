@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"errors"
@@ -11,19 +11,22 @@ import (
 )
 
 type PzUuidGenClient struct{
-	url string
+	Url string
+	Name string
+	Address string
 }
 
 func NewPzUuidGenClient(address string) *PzUuidGenClient {
 	c := new(PzUuidGenClient)
-	c.url = fmt.Sprintf("http://%s/v1", address)
-
+	c.Url = fmt.Sprintf("http://%s/v1", address)
+	c.Address = address
+	c.Name = "pz-uuidgen"
 	return c
 }
 
-func (c *PzUuidGenClient) PostToUuids(count int) (*piazza.UuidGenResponse, error) {
+func (c *PzUuidGenClient) PostToUuids(count int) (*UuidGenResponse, error) {
 
-	url := fmt.Sprintf("%s/uuids?count=%d", c.url, count)
+	url := fmt.Sprintf("%s/uuids?count=%d", c.Url, count)
 	resp, err := http.Post(url, piazza.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err
@@ -39,7 +42,7 @@ func (c *PzUuidGenClient) PostToUuids(count int) (*piazza.UuidGenResponse, error
 		return nil, err
 	}
 
-	var m piazza.UuidGenResponse
+	var m UuidGenResponse
 	err = json.Unmarshal(data, &m)
 	if err != nil {
 		return nil, err
@@ -48,9 +51,9 @@ func (c *PzUuidGenClient) PostToUuids(count int) (*piazza.UuidGenResponse, error
 	return &m, nil
 }
 
-func (c *PzUuidGenClient) GetFromAdminStats() (*piazza.UuidGenAdminStats, error) {
+func (c *PzUuidGenClient) GetFromAdminStats() (*UuidGenAdminStats, error) {
 
-	resp, err := http.Get(c.url + "/admin/stats")
+	resp, err := http.Get(c.Url + "/admin/stats")
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func (c *PzUuidGenClient) GetFromAdminStats() (*piazza.UuidGenAdminStats, error)
 		return nil, err
 	}
 
-	stats := new(piazza.UuidGenAdminStats)
+	stats := new(UuidGenAdminStats)
 	err = json.Unmarshal(data, stats)
 	if err != nil {
 		return nil, err
@@ -70,9 +73,9 @@ func (c *PzUuidGenClient) GetFromAdminStats() (*piazza.UuidGenAdminStats, error)
 	return stats, nil
 }
 
-func (c *PzUuidGenClient) GetFromAdminSettings() (*piazza.UuidGenAdminSettings, error) {
+func (c *PzUuidGenClient) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
 
-	resp, err := http.Get(c.url + "/admin/settings")
+	resp, err := http.Get(c.Url + "/admin/settings")
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +86,7 @@ func (c *PzUuidGenClient) GetFromAdminSettings() (*piazza.UuidGenAdminSettings, 
 		return nil, err
 	}
 
-	settings := new(piazza.UuidGenAdminSettings)
+	settings := new(UuidGenAdminSettings)
 	err = json.Unmarshal(data, settings)
 	if err != nil {
 		return nil, err
@@ -92,14 +95,14 @@ func (c *PzUuidGenClient) GetFromAdminSettings() (*piazza.UuidGenAdminSettings, 
 	return settings, nil
 }
 
-func (c *PzUuidGenClient) PostToAdminSettings(settings *piazza.UuidGenAdminSettings) error {
+func (c *PzUuidGenClient) PostToAdminSettings(settings *UuidGenAdminSettings) error {
 
 	data, err := json.Marshal(settings)
 	if err != nil {
 		return err
 	}
 
-	resp, err := http.Post(c.url + "/admin/settings", piazza.ContentTypeJSON, bytes.NewBuffer(data))
+	resp, err := http.Post(c.Url + "/admin/settings", piazza.ContentTypeJSON, bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}

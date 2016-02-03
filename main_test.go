@@ -4,7 +4,8 @@ import (
 	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	piazza "github.com/venicegeo/pz-gocommon"
+	//piazza "github.com/venicegeo/pz-gocommon"
+	client "github.com/venicegeo/pz-uuidgen/client"
 	"net/http"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ import (
 type UuidGenTester struct {
 	suite.Suite
 
-	client *PzUuidGenClient
+	client *client.PzUuidGenClient
 }
 
 func (suite *UuidGenTester) SetupSuite() {
@@ -28,7 +29,7 @@ func (suite *UuidGenTester) SetupSuite() {
 		t.Fatal(err)
 	}
 
-	suite.client = NewPzUuidGenClient("localhost:12340")
+	suite.client = client.NewPzUuidGenClient("localhost:12340")
 }
 
 func (suite *UuidGenTester) TearDownSuite() {
@@ -40,7 +41,7 @@ func TestRunSuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func checkValidStatsResponse(t *testing.T, stats *piazza.UuidGenAdminStats) {
+func checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
 
 	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
@@ -48,7 +49,7 @@ func checkValidStatsResponse(t *testing.T, stats *piazza.UuidGenAdminStats) {
 	assert.True(t, stats.NumRequests == 5 || stats.NumRequests == 7, "num requests: expected 5/7, actual %d", stats.NumRequests)
 }
 
-func checkValidResponse(t *testing.T, resp *piazza.UuidGenResponse, count int) []uuid.UUID {
+func checkValidResponse(t *testing.T, resp *client.UuidGenResponse, count int) []uuid.UUID {
 
 	assert.Len(t, resp.Data, count)
 
@@ -63,7 +64,7 @@ func checkValidResponse(t *testing.T, resp *piazza.UuidGenResponse, count int) [
 	return values
 }
 
-func checkValidDebugResponse(t *testing.T, resp *piazza.UuidGenResponse, count int) []string {
+func checkValidDebugResponse(t *testing.T, resp *client.UuidGenResponse, count int) []string {
 
 	assert.Len(t, resp.Data, count)
 
@@ -74,59 +75,59 @@ func (suite *UuidGenTester) TestOkay() {
 	t := suite.T()
 	assert := assert.New(t)
 
-	var resp *piazza.UuidGenResponse
+	var resp *client.UuidGenResponse
 	var err error
 	var tmp []uuid.UUID
 
 	values := []uuid.UUID{}
 
-	var client = suite.client
+	var uuidgenner = suite.client
 
 	//////////////////////
 	{
-		settings, err := client.GetFromAdminSettings()
+		settings, err := uuidgenner.GetFromAdminSettings()
 		assert.NoError(err, "GetFromAdminSettings")
 		assert.False(settings.Debug, "settings.Debug")
 
 		settings.Debug = true
-		err = client.PostToAdminSettings(settings)
+		err = uuidgenner.PostToAdminSettings(settings)
 		assert.NoError(err, "PostToAdminSettings")
 
-		settings, err = client.GetFromAdminSettings()
+		settings, err = uuidgenner.GetFromAdminSettings()
 		assert.NoError(err, "GetFromAdminSettings")
 		assert.True(settings.Debug, "settings.Debug")
 
 		settings.Debug = false
-		err = client.PostToAdminSettings(settings)
+		err = uuidgenner.PostToAdminSettings(settings)
 		assert.NoError(err, "PostToAdminSettings")
 
-		settings, err = client.GetFromAdminSettings()
+		settings, err = uuidgenner.GetFromAdminSettings()
 		assert.NoError(err, "GetFromAdminSettings")
 		assert.False(settings.Debug, "settings.Debug")
 	}
 	////////////////////////
 
-	resp, err = client.PostToUuids(1)
+	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = client.PostToUuids(1)
+	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = client.PostToUuids(1)
+	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = client.PostToUuids(10)
+	resp, err = uuidgenner.PostToUuids(10)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 10)
 	values = append(values, tmp...)
 
-	resp, err = client.PostToUuids(255)
+	resp, err = uuidgenner.PostToUuids(255)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidResponse(t, resp, 255)
 	values = append(values, tmp...)
@@ -140,7 +141,7 @@ func (suite *UuidGenTester) TestOkay() {
 		}
 	}
 
-	stats, err := client.GetFromAdminStats()
+	stats, err := uuidgenner.GetFromAdminStats()
 	assert.NoError(err, "PostToUuids")
 	checkValidStatsResponse(t, stats)
 
@@ -195,25 +196,25 @@ func (suite *UuidGenTester) TestBad() {
 func (suite *UuidGenTester) TestDebug() {
 	t := suite.T()
 	assert := assert.New(t)
-	var client = suite.client
+	var uuidgenner = suite.client
 
-	var resp *piazza.UuidGenResponse
+	var resp *client.UuidGenResponse
 	var err error
 	var tmp []string
 
 	values := []string{}
 
 	/////////////////
-	settings := &piazza.UuidGenAdminSettings{Debug: true}
-	err = client.PostToAdminSettings(settings)
+	settings := &client.UuidGenAdminSettings{Debug: true}
+	err = uuidgenner.PostToAdminSettings(settings)
 	assert.NoError(err, "PostToAdminSettings")
 
-	resp, err = client.PostToUuids(1)
+	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 
-	resp, err = client.PostToUuids(3)
+	resp, err = uuidgenner.PostToUuids(3)
 	assert.NoError(err, "PostToUuids")
 	tmp = checkValidDebugResponse(t, resp, 3)
 	values = append(values, tmp...)
@@ -223,7 +224,7 @@ func (suite *UuidGenTester) TestDebug() {
 	}
 
 	// set it back
-	settings = &piazza.UuidGenAdminSettings{Debug: false}
-	err = client.PostToAdminSettings(settings)
+	settings = &client.UuidGenAdminSettings{Debug: false}
+	err = uuidgenner.PostToAdminSettings(settings)
 	assert.NoError(err, "PostToAdminSettings")
 }

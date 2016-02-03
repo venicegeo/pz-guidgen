@@ -1,15 +1,15 @@
-package main
+package server
 
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
-	"log"
+	"github.com/venicegeo/pz-uuidgen/client"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
+	"log"
 )
 
 var pzService *piazza.PzService
@@ -28,7 +28,7 @@ func handleGetRoot(c *gin.Context) {
 }
 
 func handleGetAdminStats(c *gin.Context) {
-	stats := piazza.UuidGenAdminStats{StartTime: startTime, NumRequests: numRequests, NumUUIDs: numUUIDs}
+	stats := client.UuidGenAdminStats{StartTime: startTime, NumRequests: numRequests, NumUUIDs: numUUIDs}
 	c.IndentedJSON(http.StatusOK, stats)
 }
 
@@ -72,18 +72,18 @@ func handlePostUuids(c *gin.Context) {
 	numRequests++
 
 	// @TODO ignore any failure here
-	pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
-
+	//pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
+	log.Printf("INFO: uuidgen created %d", count)
 	c.IndentedJSON(http.StatusOK, data)
 }
 
 func handleGetAdminSettings(c *gin.Context) {
-	s := piazza.LoggerAdminSettings{Debug: debugMode}
+	s := client.UuidGenAdminSettings{Debug: debugMode}
 	c.JSON(http.StatusOK, s)
 }
 
 func handlePostAdminSettings(c *gin.Context) {
-	settings := piazza.LoggerAdminSettings{}
+	settings := client.UuidGenAdminSettings{}
 	err := c.BindJSON(&settings)
 	if err != nil {
 		c.Error(err)
@@ -98,7 +98,8 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(pzService, c)
 }
 
-func runUUIDServer(bindTo string) error {
+func RunUUIDServer(bindTo string, pzServiceParam *piazza.PzService) error {
+	pzService = pzServiceParam
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -117,51 +118,4 @@ func runUUIDServer(bindTo string) error {
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
 	return router.Run(bindTo)
-}
-
-func Main(done chan bool, local bool) int {
-
-	var err error
-
-	config, err := piazza.GetConfig("pz-uuidgen", local)
-	if err != nil {
-		log.Fatal(err)
-		return 1
-	}
-
-	err = config.RegisterServiceWithDiscover()
-	if err != nil {
-		log.Fatal(err)
-		return 1
-	}
-
-	pzService, err = piazza.NewPzService(config, false)
-	if err != nil {
-		log.Fatal(err)
-		return 1
-	}
-
-	err = pzService.WaitForService("pz-logger", 1000)
-	if err != nil {
-		log.Fatal(err)
-		return 1
-	}
-
-	if done != nil {
-		done <- true
-	}
-
-	err = runUUIDServer(config.BindTo)
-	if err != nil {
-		log.Print(err)
-		return 1
-	}
-
-	// not reached
-	return 1
-}
-
-func main() {
-	local := piazza.IsLocalConfig()
-	os.Exit(Main(nil, local))
 }
