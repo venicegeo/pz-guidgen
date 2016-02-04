@@ -4,35 +4,38 @@ import (
 	//"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"github.com/venicegeo/pz-uuidgen/server"
+	loggerPkg "github.com/venicegeo/pz-logger/client"
 	"log"
 )
 
 
 func main() {
 
-	local := piazza.IsLocalConfig()
+	var mode piazza.ConfigMode = piazza.ConfigModeCloud
+	if piazza.IsLocalConfig() {
+		mode = piazza.ConfigModeLocal
+	}
 
-	config, err := piazza.GetConfig("pz-uuidgen", local)
+	config, err := piazza.NewConfig("pz-uuidgen", mode)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	discoverClient, err := piazza.NewDiscoverClient(config)
+	sys, err := piazza.NewSystem(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = discoverClient.RegisterServiceWithDiscover(config.ServiceName, config.ServerAddress)
+	logger, err := loggerPkg.NewPzLoggerClient(sys)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = sys.WaitForService("pz-logger", 1000)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = discoverClient.WaitForService("pz-logger", 1000)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = server.RunUUIDServer(config)
+	err = server.RunUUIDServer(sys, logger)
 	if err != nil {
 		log.Fatal(err)
 	}

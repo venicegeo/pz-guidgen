@@ -6,6 +6,7 @@ import (
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"github.com/venicegeo/pz-uuidgen/client"
+	loggerPkg "github.com/venicegeo/pz-logger/client"
 	"net/http"
 	"strconv"
 	"time"
@@ -95,7 +96,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func RunUUIDServer(config *piazza.ServiceConfig) error {
+func RunUUIDServer(sys *piazza.System, logger *loggerPkg.PzLoggerClient) error {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -113,5 +114,5 @@ func RunUUIDServer(config *piazza.ServiceConfig) error {
 
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
-	return router.Run(config.BindTo)
+	return router.Run(sys.Config.BindTo)
 }

@@ -17,12 +17,12 @@ type PzUuidGenClient struct{
 	Address string
 }
 
-func NewPzUuidGenClient(address string) *PzUuidGenClient {
+func NewPzUuidGenClient(sys *piazza.System) (*PzUuidGenClient, error) {
 	c := new(PzUuidGenClient)
-	c.Url = fmt.Sprintf("http://%s/v1", address)
-	c.Address = address
+	c.Url = fmt.Sprintf("http://%s/v1", sys.Config.ServerAddress)
+	c.Address = sys.Config.ServerAddress
 	c.Name = "pz-uuidgen"
-	return c
+	return c, nil
 }
 
 func (c *PzUuidGenClient) PostToUuids(count int) (*UuidGenResponse, error) {

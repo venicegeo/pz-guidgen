@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"log"
+	loggerPkg "github.com/venicegeo/pz-logger/client"
 	"github.com/venicegeo/pz-uuidgen/client"
 	"github.com/venicegeo/pz-uuidgen/server"
 	"net/http"
@@ -16,45 +17,49 @@ import (
 type UuidGenTester struct {
 	suite.Suite
 
-	client *client.PzUuidGenClient
+	logger *loggerPkg.PzLoggerClient
+	uuidgenner *client.PzUuidGenClient
 }
 
 func (suite *UuidGenTester) SetupSuite() {
 	//t := suite.T()
 
-	config, err := piazza.GetConfig("pz-uuidgen", true)
+	config, err := piazza.NewConfig("pz-uuidgen", piazza.ConfigModeTest)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	discoverClient, err := piazza.NewDiscoverClient(config)
+	sys, err := piazza.NewSystem(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = discoverClient.RegisterServiceWithDiscover(config.ServiceName, config.ServerAddress)
+	suite.logger, err = loggerPkg.NewPzLoggerClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = discoverClient.WaitForService("pz-logger", 1000)
+	err = sys.WaitForService("pz-logger", 1000)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	suite.uuidgenner, err = client.NewPzUuidGenClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	go func() {
-		err := server.RunUUIDServer(config)
+		err = server.RunUUIDServer(sys, suite.logger)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	err = discoverClient.WaitForService("pz-uuidgen", 1000)
+	err = sys.WaitForService("pz-uuidgen", 1000)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	suite.client = client.NewPzUuidGenClient(config.ServerAddress)
 }
 
 func (suite *UuidGenTester) TearDownSuite() {
@@ -106,7 +111,7 @@ func (suite *UuidGenTester) TestOkay() {
 
 	values := []uuid.UUID{}
 
-	var uuidgenner = suite.client
+	var uuidgenner = suite.uuidgenner
 
 	//////////////////////
 	{
@@ -221,7 +226,7 @@ func (suite *UuidGenTester) TestBad() {
 func (suite *UuidGenTester) TestDebug() {
 	t := suite.T()
 	assert := assert.New(t)
-	var uuidgenner = suite.client
+	var uuidgenner = suite.uuidgenner
 
 	var resp *client.UuidGenResponse
 	var err error
