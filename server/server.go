@@ -96,7 +96,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func RunUUIDServer(sys *piazza.System, logger *loggerPkg.PzLoggerClient) error {
+func RunUUIDServer(sys *piazza.System, logger loggerPkg.LoggerClient) error {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

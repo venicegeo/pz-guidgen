@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type UuidGen interface {
+type UuidGenClient interface {
 	// high-level interfaces
 	GetUuid() (string, error)
 

@@ -5,11 +5,10 @@ import (
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon"
-	"log"
 	loggerPkg "github.com/venicegeo/pz-logger/client"
 	"github.com/venicegeo/pz-uuidgen/client"
 	"github.com/venicegeo/pz-uuidgen/server"
-	"net/http"
+	"log"
 	"testing"
 	"time"
 )
@@ -17,8 +16,8 @@ import (
 type UuidGenTester struct {
 	suite.Suite
 
-	logger *loggerPkg.PzLoggerClient
-	uuidgenner *client.PzUuidGenClient
+	logger     loggerPkg.LoggerClient
+	uuidgenner client.UuidGenClient
 }
 
 func (suite *UuidGenTester) SetupSuite() {
@@ -34,12 +33,7 @@ func (suite *UuidGenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.logger, err = loggerPkg.NewPzLoggerClient(sys)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = sys.WaitForService("pz-logger", 1000)
+	suite.logger, err = loggerPkg.NewMockLoggerClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -182,50 +176,25 @@ func (suite *UuidGenTester) TestOkay() {
 
 func (suite *UuidGenTester) TestBad() {
 	t := suite.T()
+	assert := assert.New(t)
 
-	var resp *http.Response
 	var err error
 
-	// bad url
-	resp, err = http.Post("http://localhost:12340/v1/guid", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("bad url was accepted")
-	}
+	var uuidgenner = suite.uuidgenner
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=-1", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("bad count was accepted")
-	}
+	_, err = uuidgenner.PostToUuids(-1)
+	assert.Error(err)
 
 	// count out of range
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=256", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("bad count was accepted")
-	}
-
-	// bad count
-	resp, err = http.Post("http://localhost:12340/v1/uuids?count=fortyleven", "text/plain", nil)
-	if err != nil {
-		t.Fatalf("post failed: %s", err)
-	}
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("bad count was accepted")
-	}
+	_, err = uuidgenner.PostToUuids(256)
+	assert.Error(err)
 }
 
 func (suite *UuidGenTester) TestDebug() {
 	t := suite.T()
 	assert := assert.New(t)
+
 	var uuidgenner = suite.uuidgenner
 
 	var resp *client.UuidGenResponse

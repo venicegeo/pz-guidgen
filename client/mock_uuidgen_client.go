@@ -2,26 +2,32 @@ package client
 
 import (
 //	"time"
+	"github.com/venicegeo/pz-gocommon"
 )
 
-type MockUuidGen struct{}
+type MockUuidGenClient struct{}
 
-func (*MockUuidGen) PostToUuids(count int) (*UuidGenResponse, error) {
+func NewMockUuidGenClient(sys *piazza.System) (*MockUuidGenClient, error) {
+	c := MockUuidGenClient{}
+	return &c, nil
+}
+
+func (*MockUuidGenClient) PostToUuids(count int) (*UuidGenResponse, error) {
 	m := &UuidGenResponse{Data: []string{"xxx"}}
 	return m, nil
 }
 
-func (*MockUuidGen) GetFromAdminStats() (*UuidGenAdminStats, error) {
+func (*MockUuidGenClient) GetFromAdminStats() (*UuidGenAdminStats, error) {
 	return &UuidGenAdminStats{}, nil
 }
 
-func (*MockUuidGen) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
+func (*MockUuidGenClient) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
 	return &UuidGenAdminSettings{}, nil
 }
 
-func (*MockUuidGen) PostToAdminSettings(*UuidGenAdminSettings) error {
+func (*MockUuidGenClient) PostToAdminSettings(*UuidGenAdminSettings) error {
 	return nil
 }
-func (*MockUuidGen) GetUuid() (string, error) {
+func (*MockUuidGenClient) GetUuid() (string, error) {
 	return "this-is-a-uuid", nil
 }

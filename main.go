@@ -26,13 +26,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger, err := loggerPkg.NewPzLoggerClient(sys)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = sys.WaitForService("pz-logger", 1000)
-	if err != nil {
-		log.Fatal(err)
+	var logger *loggerPkg.PzLoggerClient
+	{
+		logger, err = loggerPkg.NewPzLoggerClient(sys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = sys.WaitForService("pz-logger", 1000)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	err = server.RunUUIDServer(sys, logger)
