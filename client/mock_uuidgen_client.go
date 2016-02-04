@@ -22,3 +22,6 @@ func (*MockUuidGen) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
 func (*MockUuidGen) PostToAdminSettings(*UuidGenAdminSettings) error {
 	return nil
 }
+func (*MockUuidGen) GetUuid() (string, error) {
+	return "this-is-a-uuid", nil
+}

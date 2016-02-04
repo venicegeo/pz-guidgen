@@ -12,8 +12,6 @@ import (
 	"log"
 )
 
-var pzService *piazza.PzService
-
 var debugCounter = 0
 
 var numRequests = 0
@@ -57,7 +55,7 @@ func handlePostUuids(c *gin.Context) {
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if pzService.Debug {
+		if debugMode {
 			uuids[i] = fmt.Sprintf("%d", debugCounter)
 			debugCounter++
 		} else {
@@ -90,16 +88,14 @@ func handlePostAdminSettings(c *gin.Context) {
 		return
 	}
 	debugMode = settings.Debug
-	pzService.Debug = settings.Debug
 	c.String(http.StatusOK, "")
 }
 
 func handlePostAdminShutdown(c *gin.Context) {
-	piazza.HandlePostAdminShutdown(pzService, c)
+	piazza.HandlePostAdminShutdown(c)
 }
 
-func RunUUIDServer(bindTo string, pzServiceParam *piazza.PzService) error {
-	pzService = pzServiceParam
+func RunUUIDServer(config *piazza.ServiceConfig) error {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -117,5 +113,5 @@ func RunUUIDServer(bindTo string, pzServiceParam *piazza.PzService) error {
 
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
-	return router.Run(bindTo)
+	return router.Run(config.BindTo)
 }

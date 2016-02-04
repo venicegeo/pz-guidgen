@@ -5,55 +5,38 @@ import (
 	piazza "github.com/venicegeo/pz-gocommon"
 	"github.com/venicegeo/pz-uuidgen/server"
 	"log"
-	"os"
 )
 
-var pzService *piazza.PzService
 
+func main() {
 
-func Main(done chan bool, local bool) int {
-
-	var err error
+	local := piazza.IsLocalConfig()
 
 	config, err := piazza.GetConfig("pz-uuidgen", local)
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 
-	err = config.RegisterServiceWithDiscover()
+	discoverClient, err := piazza.NewDiscoverClient(config)
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 
-	pzService, err = piazza.NewPzService(config, false)
+	err = discoverClient.RegisterServiceWithDiscover(config.ServiceName, config.ServerAddress)
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 
-	err = pzService.WaitForService("pz-logger", 1000)
+	err = discoverClient.WaitForService("pz-logger", 1000)
 	if err != nil {
 		log.Fatal(err)
-		return 1
 	}
 
-	if done != nil {
-		done <- true
-	}
-
-	err = server.RunUUIDServer(config.BindTo, pzService)
+	err = server.RunUUIDServer(config)
 	if err != nil {
-		log.Print(err)
-		return 1
+		log.Fatal(err)
 	}
 
 	// not reached
-	return 1
-}
-
-func main() {
-	local := piazza.IsLocalConfig()
-	os.Exit(Main(nil, local))
+	log.Fatal("not reached")
 }

@@ -4,8 +4,10 @@ import (
 	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	//piazza "github.com/venicegeo/pz-gocommon"
-	client "github.com/venicegeo/pz-uuidgen/client"
+	piazza "github.com/venicegeo/pz-gocommon"
+	"log"
+	"github.com/venicegeo/pz-uuidgen/client"
+	"github.com/venicegeo/pz-uuidgen/server"
 	"net/http"
 	"testing"
 	"time"
@@ -18,18 +20,41 @@ type UuidGenTester struct {
 }
 
 func (suite *UuidGenTester) SetupSuite() {
-	t := suite.T()
+	//t := suite.T()
 
-	done := make(chan bool, 1)
-	go Main(done, true)
-	<-done
-
-	err := pzService.WaitForService(pzService.Name, 1000)
+	config, err := piazza.GetConfig("pz-uuidgen", true)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 
-	suite.client = client.NewPzUuidGenClient("localhost:12340")
+	discoverClient, err := piazza.NewDiscoverClient(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = discoverClient.RegisterServiceWithDiscover(config.ServiceName, config.ServerAddress)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = discoverClient.WaitForService("pz-logger", 1000)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		err := server.RunUUIDServer(config)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	err = discoverClient.WaitForService("pz-uuidgen", 1000)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	suite.client = client.NewPzUuidGenClient(config.ServerAddress)
 }
 
 func (suite *UuidGenTester) TearDownSuite() {
@@ -145,7 +170,7 @@ func (suite *UuidGenTester) TestOkay() {
 	assert.NoError(err, "PostToUuids")
 	checkValidStatsResponse(t, stats)
 
-	s, err := pzService.GetUuid()
+	s, err := uuidgenner.GetUuid()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 }

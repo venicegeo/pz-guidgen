@@ -5,6 +5,9 @@ import (
 )
 
 type UuidGen interface {
+	// high-level interfaces
+	GetUuid() (string, error)
+
 	// low-level interfaces
 	PostToUuids(count int) (*UuidGenResponse, error)
 	GetFromAdminStats() (*UuidGenAdminStats, error)

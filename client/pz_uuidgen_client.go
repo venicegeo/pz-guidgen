@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"bytes"
+	"log"
 	"io/ioutil"
 )
 
@@ -112,4 +113,38 @@ func (c *PzUuidGenClient) PostToAdminSettings(settings *UuidGenAdminSettings) er
 	}
 
 	return nil
+}
+
+func (pz *PzUuidGenClient) GetUuid() (string, error) {
+
+	resp, err := http.Post(pz.Url + "/uuids", piazza.ContentTypeText, nil)
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New(resp.Status)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var data map[string][]string
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		//pz.Error("PzService.GetUuid", err)
+		log.Printf("PzService.GetUuid: %v", err)
+	}
+
+	uuids, ok := data["data"]
+	if !ok {
+		//pz.Error("PzService.GetUuid: returned data has invalid data type", nil)
+		log.Printf("PzService.GetUuid: returned data has invalid data type")
+	}
+
+	if len(uuids) != 1 {
+		//pz.Error("PzService.GetUuid: returned array wrong size", nil)
+		log.Printf("PzService.GetUuid: returned array wrong size")
+	}
+
+	return uuids[0], nil
 }
