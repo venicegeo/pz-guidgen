@@ -16,8 +16,8 @@ import (
 type UuidGenTester struct {
 	suite.Suite
 
-	logger     loggerPkg.LoggerClient
-	uuidgenner client.UuidGenClient
+	logger     loggerPkg.ILoggerService
+	uuidgenner client.IUuidGenService
 }
 
 func (suite *UuidGenTester) SetupSuite() {
@@ -33,12 +33,12 @@ func (suite *UuidGenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.logger, err = loggerPkg.NewMockLoggerClient(sys)
+	suite.logger, err = loggerPkg.NewMockLoggerService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	suite.uuidgenner, err = client.NewPzUuidGenClient(sys)
+	suite.uuidgenner, err = client.NewPzUuidGenService(sys, false)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,7 +50,7 @@ func (suite *UuidGenTester) SetupSuite() {
 		}
 	}()
 
-	err = sys.WaitForService("pz-uuidgen", 1000)
+	err = sys.WaitForService(suite.uuidgenner, 1000)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -4,7 +4,10 @@ import (
 	"time"
 )
 
-type UuidGenClient interface {
+type IUuidGenService interface {
+	GetName() string
+	GetAddress() string
+
 	// high-level interfaces
 	GetUuid() (string, error)
 

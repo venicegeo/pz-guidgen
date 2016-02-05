@@ -3,11 +3,10 @@ package main
 import (
 	//"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
-	"github.com/venicegeo/pz-uuidgen/server"
 	loggerPkg "github.com/venicegeo/pz-logger/client"
+	"github.com/venicegeo/pz-uuidgen/server"
 	"log"
 )
-
 
 func main() {
 
@@ -26,16 +25,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var logger *loggerPkg.PzLoggerClient
-	{
-		logger, err = loggerPkg.NewPzLoggerClient(sys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		err = sys.WaitForService("pz-logger", 1000)
-		if err != nil {
-			log.Fatal(err)
-		}
+	logger, err := loggerPkg.NewPzLoggerService(sys, true)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	err = server.RunUUIDServer(sys, logger)
