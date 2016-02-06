@@ -13,17 +13,17 @@ import (
 	"time"
 )
 
-type UuidGenTester struct {
+type UuidgenTester struct {
 	suite.Suite
 
 	logger     loggerPkg.ILoggerService
 	uuidgenner client.IUuidGenService
 }
 
-func (suite *UuidGenTester) SetupSuite() {
+func (suite *UuidgenTester) SetupSuite() {
 	//t := suite.T()
 
-	config, err := piazza.NewConfig("pz-uuidgen", piazza.ConfigModeTest)
+	config, err := piazza.NewConfig(piazza.PzUuidgen, piazza.ConfigModeTest)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,35 +38,24 @@ func (suite *UuidGenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.uuidgenner, err = client.NewPzUuidGenService(sys, false)
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
 
-	go func() {
-		err = server.RunUUIDServer(sys, suite.logger)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	err = sys.WaitForService(suite.uuidgenner, 1000)
+	suite.uuidgenner, err = client.NewPzUuidGenService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (suite *UuidGenTester) TearDownSuite() {
+func (suite *UuidgenTester) TearDownSuite() {
 	//TODO: kill the go routine running the server
 }
 
 func TestRunSuite(t *testing.T) {
-	s := new(UuidGenTester)
+	s := new(UuidgenTester)
 	suite.Run(t, s)
 }
 
 func checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
-
 	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
 	assert.True(t, stats.NumUUIDs == 268 || stats.NumUUIDs == 272, "num uuids: expected 268/272, actual %d", stats.NumUUIDs)
@@ -95,7 +84,7 @@ func checkValidDebugResponse(t *testing.T, resp *client.UuidGenResponse, count i
 	return resp.Data
 }
 
-func (suite *UuidGenTester) TestOkay() {
+func (suite *UuidgenTester) TestOkay() {
 	t := suite.T()
 	assert := assert.New(t)
 
@@ -174,7 +163,7 @@ func (suite *UuidGenTester) TestOkay() {
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 }
 
-func (suite *UuidGenTester) TestBad() {
+func (suite *UuidgenTester) TestBad() {
 	t := suite.T()
 	assert := assert.New(t)
 
@@ -191,7 +180,7 @@ func (suite *UuidGenTester) TestBad() {
 	assert.Error(err)
 }
 
-func (suite *UuidGenTester) TestDebug() {
+func (suite *UuidgenTester) TestDebug() {
 	t := suite.T()
 	assert := assert.New(t)
 

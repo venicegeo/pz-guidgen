@@ -23,9 +23,10 @@ type UuidGenResponse struct {
 }
 
 type UuidGenAdminStats struct {
-	StartTime   time.Time `json:"starttime"`
-	NumRequests int       `json:"num_requests"`
 	NumUUIDs    int       `json:"num_uuids"`
+	DebugCount  int       `json:"debug_count"`
+	NumRequests int       `json:"num_requests"`
+	StartTime   time.Time `json:"starttime"`
 }
 
 type UuidGenAdminSettings struct {

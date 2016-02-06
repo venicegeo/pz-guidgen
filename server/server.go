@@ -5,30 +5,43 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
-	"github.com/venicegeo/pz-uuidgen/client"
 	loggerPkg "github.com/venicegeo/pz-logger/client"
+	"github.com/venicegeo/pz-uuidgen/client"
+	"log"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
-	"log"
 )
 
-var debugCounter = 0
+type LockedAdminSettings struct {
+	sync.Mutex
+	client.UuidGenAdminSettings
+}
 
-var numRequests = 0
-var numUUIDs = 0
+var settings LockedAdminSettings
 
-var startTime = time.Now()
+type LockedAdminStats struct {
+	sync.Mutex
+	client.UuidGenAdminStats
+}
 
-var debugMode bool
+var stats LockedAdminStats
+
+func init() {
+	stats.StartTime = time.Now()
+}
 
 func handleGetRoot(c *gin.Context) {
 	c.String(http.StatusOK, "Hi. I'm pz-uuidgen.")
+	log.Print("got health-check request")
 }
 
 func handleGetAdminStats(c *gin.Context) {
-	stats := client.UuidGenAdminStats{StartTime: startTime, NumRequests: numRequests, NumUUIDs: numUUIDs}
-	c.IndentedJSON(http.StatusOK, stats)
+	stats.Lock()
+	t := stats.UuidGenAdminStats
+	stats.Unlock()
+	c.JSON(http.StatusOK, t)
 }
 
 // request body is ignored
@@ -56,9 +69,11 @@ func handlePostUuids(c *gin.Context) {
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if debugMode {
-			uuids[i] = fmt.Sprintf("%d", debugCounter)
-			debugCounter++
+		if settings.Debug {
+			stats.Lock()
+			uuids[i] = fmt.Sprintf("%d", stats.DebugCount)
+			stats.DebugCount++
+			stats.Unlock()
 		} else {
 			uuids[i] = uuid.New()
 		}
@@ -67,8 +82,10 @@ func handlePostUuids(c *gin.Context) {
 	data := make(map[string]interface{})
 	data["data"] = uuids
 
-	numUUIDs += count
-	numRequests++
+	stats.Lock()
+	stats.NumUUIDs += count
+	stats.NumRequests++
+	stats.Unlock()
 
 	// @TODO ignore any failure here
 	//pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
@@ -77,18 +94,23 @@ func handlePostUuids(c *gin.Context) {
 }
 
 func handleGetAdminSettings(c *gin.Context) {
-	s := client.UuidGenAdminSettings{Debug: debugMode}
-	c.JSON(http.StatusOK, s)
+	settings.Lock()
+	t := settings
+	settings.Unlock()
+	c.JSON(http.StatusOK, t)
 }
 
 func handlePostAdminSettings(c *gin.Context) {
-	settings := client.UuidGenAdminSettings{}
-	err := c.BindJSON(&settings)
+	t := client.UuidGenAdminSettings{}
+	err := c.BindJSON(&t)
 	if err != nil {
 		c.Error(err)
 		return
 	}
-	debugMode = settings.Debug
+	settings.Lock()
+	settings.UuidGenAdminSettings = t
+	settings.Unlock()
+
 	c.String(http.StatusOK, "")
 }
 
@@ -96,7 +118,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func RunUUIDServer(sys *piazza.System, logger loggerPkg.ILoggerService) error {
+func CreateHandlers(sys *piazza.System, logger loggerPkg.ILoggerService) http.Handler {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -114,5 +136,5 @@ func RunUUIDServer(sys *piazza.System, logger loggerPkg.ILoggerService) error {
 
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
-	return router.Run(sys.Config.BindTo)
+	return router
 }
