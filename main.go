@@ -15,7 +15,7 @@ func main() {
 		mode = piazza.ConfigModeLocal
 	}
 
-	config, err := piazza.NewConfig("pz-uuidgen", mode)
+	config, err := piazza.NewConfig(piazza.PzUuidGen, mode)
 	if err != nil {
 		log.Fatal(err)
 	}

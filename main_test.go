@@ -23,7 +23,7 @@ type UuidGenTester struct {
 func (suite *UuidGenTester) SetupSuite() {
 	//t := suite.T()
 
-	config, err := piazza.NewConfig("pz-uuidgen", piazza.ConfigModeTest)
+	config, err := piazza.NewConfig(piazza.PzUuidGen, piazza.ConfigModeTest)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,7 +56,6 @@ func TestRunSuite(t *testing.T) {
 }
 
 func checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
-
 	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
 	assert.True(t, stats.NumUUIDs == 268 || stats.NumUUIDs == 272, "num uuids: expected 268/272, actual %d", stats.NumUUIDs)

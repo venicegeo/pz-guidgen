@@ -5,25 +5,27 @@ import (
 )
 
 type MockUuidGenService struct{
-	Name string
-	Address string
+	name    string
+	address string
 }
 
 func NewMockUuidGenService(sys *piazza.System) (*MockUuidGenService, error) {
 	var _ piazza.IService = new(MockUuidGenService)
 	var _ IUuidGenService = new(MockUuidGenService)
 
-	c := MockUuidGenService{Name: "pz-uuidgen", Address: "0.0.0.0"}
+	service := &MockUuidGenService{name: piazza.PzUuidGen, address: "0.0.0.0"}
 
-	return &c, nil
+	sys.Services[piazza.PzUuidGen] = service
+
+	return service, nil
 }
 
-func (c *MockUuidGenService) GetName() string {
-	return c.Name
+func (c MockUuidGenService) GetName() string {
+	return c.name
 }
 
-func (c *MockUuidGenService) GetAddress() string {
-	return c.Address
+func (c MockUuidGenService) GetAddress() string {
+	return c.address
 }
 
 func (*MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, error) {
