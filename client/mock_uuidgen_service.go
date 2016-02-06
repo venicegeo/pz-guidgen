@@ -4,7 +4,7 @@ import (
 	"github.com/venicegeo/pz-gocommon"
 )
 
-type MockUuidGenService struct{
+type MockUuidGenService struct {
 	name    string
 	address string
 }
@@ -13,9 +13,9 @@ func NewMockUuidGenService(sys *piazza.System) (*MockUuidGenService, error) {
 	var _ piazza.IService = new(MockUuidGenService)
 	var _ IUuidGenService = new(MockUuidGenService)
 
-	service := &MockUuidGenService{name: piazza.PzUuidGen, address: "0.0.0.0"}
+	service := &MockUuidGenService{name: piazza.PzUuidgen, address: "0.0.0.0"}
 
-	sys.Services[piazza.PzUuidGen] = service
+	sys.Services[piazza.PzUuidgen] = service
 
 	return service, nil
 }

@@ -23,11 +23,11 @@ func NewPzUuidGenService(sys *piazza.System) (*PzUuidGenService, error) {
 
 	var err error
 
-	data := sys.DiscoverService.GetDataForService(piazza.PzUuidGen)
+	data := sys.DiscoverService.GetDataForService(piazza.PzUuidgen)
 
 	service := &PzUuidGenService{
 		url:     fmt.Sprintf("http://%s/v1", sys.Config.GetAddress()),
-		name:    piazza.PzUuidGen,
+		name:    piazza.PzUuidgen,
 		address: data.Host}
 
 	err = sys.WaitForService(service)
@@ -35,7 +35,7 @@ func NewPzUuidGenService(sys *piazza.System) (*PzUuidGenService, error) {
 		return nil, err
 	}
 
-	sys.Services[piazza.PzUuidGen] = service
+	sys.Services[piazza.PzUuidgen] = service
 
 	return service, nil
 }
@@ -126,7 +126,7 @@ func (c *PzUuidGenService) PostToAdminSettings(settings *UuidGenAdminSettings) e
 		return err
 	}
 
-	resp, err := http.Post(c.url +"/admin/settings", piazza.ContentTypeJSON, bytes.NewBuffer(data))
+	resp, err := http.Post(c.url+"/admin/settings", piazza.ContentTypeJSON, bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (c *PzUuidGenService) PostToAdminSettings(settings *UuidGenAdminSettings) e
 
 func (pz *PzUuidGenService) GetUuid() (string, error) {
 
-	resp, err := http.Post(pz.url +"/uuids", piazza.ContentTypeText, nil)
+	resp, err := http.Post(pz.url+"/uuids", piazza.ContentTypeText, nil)
 	if err != nil {
 		return "", err
 	}

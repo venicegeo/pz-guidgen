@@ -15,7 +15,7 @@ func main() {
 		mode = piazza.ConfigModeLocal
 	}
 
-	config, err := piazza.NewConfig(piazza.PzUuidGen, mode)
+	config, err := piazza.NewConfig(piazza.PzUuidgen, mode)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func main() {
 
 	done := sys.StartServer(server.CreateHandlers(sys, loggerService))
 
-	err = <- done
+	err = <-done
 	if err != nil {
 		log.Fatal(err)
 	}
