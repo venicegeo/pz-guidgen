@@ -17,7 +17,7 @@ type PzUuidGenService struct{
 	Address string
 }
 
-func NewPzUuidGenService(sys *piazza.System, wait bool) (*PzUuidGenService, error) {
+func NewPzUuidGenService(sys *piazza.System) (*PzUuidGenService, error) {
 	var _ piazza.IService = new(PzUuidGenService)
 	var _ IUuidGenService = new(PzUuidGenService)
 
@@ -33,11 +33,9 @@ func NewPzUuidGenService(sys *piazza.System, wait bool) (*PzUuidGenService, erro
 	}
 	service.Address = data.Host
 
-	if wait {
-		err = sys.WaitForService(service, 1000)
-		if err != nil {
-			return nil, err
-		}
+	err = sys.WaitForService(service.Name, service.Address)
+	if err != nil {
+		return nil, err
 	}
 
 	return service, nil

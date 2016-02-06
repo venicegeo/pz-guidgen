@@ -24,6 +24,7 @@ var debugMode bool
 
 func handleGetRoot(c *gin.Context) {
 	c.String(http.StatusOK, "Hi. I'm pz-uuidgen.")
+	log.Print("got health-check request")
 }
 
 func handleGetAdminStats(c *gin.Context) {
@@ -96,7 +97,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func RunUUIDServer(sys *piazza.System, logger loggerPkg.ILoggerService) error {
+func CreateHandlers(sys *piazza.System, logger loggerPkg.ILoggerService) (http.Handler) {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
@@ -114,5 +115,5 @@ func RunUUIDServer(sys *piazza.System, logger loggerPkg.ILoggerService) error {
 
 	router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
-	return router.Run(sys.Config.BindTo)
+	return router
 }

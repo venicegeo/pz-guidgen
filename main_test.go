@@ -38,19 +38,9 @@ func (suite *UuidGenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.uuidgenner, err = client.NewPzUuidGenService(sys, false)
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
 
-	go func() {
-		err = server.RunUUIDServer(sys, suite.logger)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	err = sys.WaitForService(suite.uuidgenner, 1000)
+	suite.uuidgenner, err = client.NewPzUuidGenService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}

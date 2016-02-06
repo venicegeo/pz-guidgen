@@ -25,16 +25,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	logger, err := loggerPkg.NewPzLoggerService(sys, true)
+	loggerService, err := loggerPkg.NewPzLoggerService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = server.RunUUIDServer(sys, logger)
+	done := sys.StartServer(server.CreateHandlers(sys, loggerService))
+
+	err = <- done
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// not reached
-	log.Fatal("not reached")
 }
