@@ -17,18 +17,16 @@ type PzUuidGenService struct {
 	address string
 }
 
-func NewPzUuidGenService(sys *piazza.System) (*PzUuidGenService, error) {
+func NewPzUuidGenService(sys *piazza.System, address string) (*PzUuidGenService, error) {
 	var _ piazza.IService = new(PzUuidGenService)
 	var _ IUuidGenService = new(PzUuidGenService)
 
 	var err error
 
-	data := sys.DiscoverService.GetDataForService(piazza.PzUuidgen)
-
 	service := &PzUuidGenService{
-		url:     fmt.Sprintf("http://%s/v1", sys.Config.GetAddress()),
+		url:     fmt.Sprintf("http://%s/v1", address),
 		name:    piazza.PzUuidgen,
-		address: data.Host}
+		address: address}
 
 	err = sys.WaitForService(service)
 	if err != nil {

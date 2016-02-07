@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	loggerService, err := loggerPkg.NewPzLoggerService(sys)
+	loggerService, err := loggerPkg.NewPzLoggerService(sys, sys.DiscoverService.GetDataForService(piazza.PzLogger).Host)
 	if err != nil {
 		log.Fatal(err)
 	}
