@@ -40,7 +40,7 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
 
-	suite.uuidgenner, err = client.NewPzUuidGenService(sys)
+	suite.uuidgenner, err = client.NewPzUuidGenService(sys, sys.Config.GetBindToAddress())
 	if err != nil {
 		log.Fatal(err)
 	}
