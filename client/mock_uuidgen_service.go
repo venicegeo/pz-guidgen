@@ -5,7 +5,7 @@ import (
 )
 
 type MockUuidGenService struct {
-	name    string
+	name    piazza.ServiceName
 	address string
 }
 
@@ -20,7 +20,7 @@ func NewMockUuidGenService(sys *piazza.System) (*MockUuidGenService, error) {
 	return service, nil
 }
 
-func (c MockUuidGenService) GetName() string {
+func (c MockUuidGenService) GetName() piazza.ServiceName {
 	return c.name
 }
 

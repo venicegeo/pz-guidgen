@@ -2,10 +2,11 @@ package client
 
 import (
 	"time"
+	piazza "github.com/venicegeo/pz-gocommon"
 )
 
 type IUuidGenService interface {
-	GetName() string
+	GetName() piazza.ServiceName
 	GetAddress() string
 
 	// high-level interfaces

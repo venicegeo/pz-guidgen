@@ -13,7 +13,7 @@ import (
 
 type PzUuidGenService struct {
 	url     string
-	name    string
+	name    piazza.ServiceName
 	address string
 }
 
@@ -38,7 +38,7 @@ func NewPzUuidGenService(sys *piazza.System, address string) (*PzUuidGenService,
 	return service, nil
 }
 
-func (c PzUuidGenService) GetName() string {
+func (c PzUuidGenService) GetName() piazza.ServiceName {
 	return c.name
 }
 
