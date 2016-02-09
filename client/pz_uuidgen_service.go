@@ -7,7 +7,6 @@ import (
 	"fmt"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -138,34 +137,10 @@ func (c *PzUuidGenService) PostToAdminSettings(settings *UuidGenAdminSettings) e
 
 func (pz *PzUuidGenService) GetUuid() (string, error) {
 
-	resp, err := http.Post(pz.url+"/uuids", piazza.ContentTypeText, nil)
+	resp, err := pz.PostToUuids(1)
 	if err != nil {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var data map[string][]string
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		//pz.Error("PzService.GetUuid", err)
-		log.Printf("PzService.GetUuid: %v", err)
-	}
-
-	uuids, ok := data["data"]
-	if !ok {
-		//pz.Error("PzService.GetUuid: returned data has invalid data type", nil)
-		log.Printf("PzService.GetUuid: returned data has invalid data type")
-	}
-
-	if len(uuids) != 1 {
-		//pz.Error("PzService.GetUuid: returned array wrong size", nil)
-		log.Printf("PzService.GetUuid: returned array wrong size")
-	}
-
-	return uuids[0], nil
+	return resp.Data[0], nil
 }
