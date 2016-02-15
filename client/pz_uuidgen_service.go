@@ -1,3 +1,17 @@
+// Copyright 2016, RadiantBlue Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package client
 
 import (
@@ -7,13 +21,12 @@ import (
 	"fmt"
 	piazza "github.com/venicegeo/pz-gocommon"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
 type PzUuidGenService struct {
 	url     string
-	name    string
+	name    piazza.ServiceName
 	address string
 }
 
@@ -38,7 +51,7 @@ func NewPzUuidGenService(sys *piazza.System, address string) (*PzUuidGenService,
 	return service, nil
 }
 
-func (c PzUuidGenService) GetName() string {
+func (c PzUuidGenService) GetName() piazza.ServiceName {
 	return c.name
 }
 
@@ -138,34 +151,10 @@ func (c *PzUuidGenService) PostToAdminSettings(settings *UuidGenAdminSettings) e
 
 func (pz *PzUuidGenService) GetUuid() (string, error) {
 
-	resp, err := http.Post(pz.url+"/uuids", piazza.ContentTypeText, nil)
+	resp, err := pz.PostToUuids(1)
 	if err != nil {
 		return "", err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(resp.Status)
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	var data map[string][]string
-	err = json.Unmarshal(body, &data)
-	if err != nil {
-		//pz.Error("PzService.GetUuid", err)
-		log.Printf("PzService.GetUuid: %v", err)
-	}
-
-	uuids, ok := data["data"]
-	if !ok {
-		//pz.Error("PzService.GetUuid: returned data has invalid data type", nil)
-		log.Printf("PzService.GetUuid: returned data has invalid data type")
-	}
-
-	if len(uuids) != 1 {
-		//pz.Error("PzService.GetUuid: returned array wrong size", nil)
-		log.Printf("PzService.GetUuid: returned array wrong size")
-	}
-
-	return uuids[0], nil
+	return resp.Data[0], nil
 }
