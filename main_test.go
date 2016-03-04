@@ -29,7 +29,7 @@ import (
 
 type UuidgenTester struct {
 	suite.Suite
-
+	total      int
 	logger     loggerPkg.ILoggerService
 	uuidgenner client.IUuidGenService
 }
@@ -58,6 +58,8 @@ func (suite *UuidgenTester) SetupSuite() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	suite.total = 0
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
@@ -69,15 +71,13 @@ func TestRunSuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
+func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
 	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
-	assert.True(t, stats.NumUUIDs == 268 || stats.NumUUIDs == 272, "num uuids: expected 268/272, actual %d", stats.NumUUIDs)
-	assert.True(t, stats.NumRequests == 5 || stats.NumRequests == 7, "num requests: expected 5/7, actual %d", stats.NumRequests)
+	assert.Equal(t, suite.total, stats.NumUUIDs)
 }
 
-func checkValidResponse(t *testing.T, resp *client.UuidGenResponse, count int) []uuid.UUID {
-
+func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *client.UuidGenResponse, count int) []uuid.UUID {
 	assert.Len(t, resp.Data, count)
 
 	values := make([]uuid.UUID, count)
@@ -91,7 +91,7 @@ func checkValidResponse(t *testing.T, resp *client.UuidGenResponse, count int) [
 	return values
 }
 
-func checkValidDebugResponse(t *testing.T, resp *client.UuidGenResponse, count int) []string {
+func (suite *UuidgenTester) checkValidDebugResponse(t *testing.T, resp *client.UuidGenResponse, count int) []string {
 
 	assert.Len(t, resp.Data, count)
 
@@ -110,54 +110,35 @@ func (suite *UuidgenTester) TestOkay() {
 
 	var uuidgenner = suite.uuidgenner
 
-	//////////////////////
-	{
-		settings, err := uuidgenner.GetFromAdminSettings()
-		assert.NoError(err, "GetFromAdminSettings")
-		assert.False(settings.Debug, "settings.Debug")
-
-		settings.Debug = true
-		err = uuidgenner.PostToAdminSettings(settings)
-		assert.NoError(err, "PostToAdminSettings")
-
-		settings, err = uuidgenner.GetFromAdminSettings()
-		assert.NoError(err, "GetFromAdminSettings")
-		assert.True(settings.Debug, "settings.Debug")
-
-		settings.Debug = false
-		err = uuidgenner.PostToAdminSettings(settings)
-		assert.NoError(err, "PostToAdminSettings")
-
-		settings, err = uuidgenner.GetFromAdminSettings()
-		assert.NoError(err, "GetFromAdminSettings")
-		assert.False(settings.Debug, "settings.Debug")
-	}
-	////////////////////////
+	resp, err = uuidgenner.PostToUuids(1)
+	assert.NoError(err, "PostToUuids")
+	tmp = suite.checkValidResponse(t, resp, 1)
+	values = append(values, tmp...)
+	suite.total += 1
 
 	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
-	tmp = checkValidResponse(t, resp, 1)
+	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
+	suite.total += 1
 
 	resp, err = uuidgenner.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
-	tmp = checkValidResponse(t, resp, 1)
+	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
-
-	resp, err = uuidgenner.PostToUuids(1)
-	assert.NoError(err, "PostToUuids")
-	tmp = checkValidResponse(t, resp, 1)
-	values = append(values, tmp...)
+	suite.total += 1
 
 	resp, err = uuidgenner.PostToUuids(10)
 	assert.NoError(err, "PostToUuids")
-	tmp = checkValidResponse(t, resp, 10)
+	tmp = suite.checkValidResponse(t, resp, 10)
 	values = append(values, tmp...)
+	suite.total += 10
 
 	resp, err = uuidgenner.PostToUuids(255)
 	assert.NoError(err, "PostToUuids")
-	tmp = checkValidResponse(t, resp, 255)
+	tmp = suite.checkValidResponse(t, resp, 255)
 	values = append(values, tmp...)
+	suite.total += 255
 
 	// uuids should be, umm, unique
 	for i := 0; i < len(values); i++ {
@@ -170,11 +151,56 @@ func (suite *UuidgenTester) TestOkay() {
 
 	stats, err := uuidgenner.GetFromAdminStats()
 	assert.NoError(err, "PostToUuids")
-	checkValidStatsResponse(t, stats)
+	suite.checkValidStatsResponse(t, stats)
 
 	s, err := uuidgenner.GetUuid()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
+	suite.total += 1
+}
+
+func (suite *UuidgenTester) TestDebugOkay() {
+	t := suite.T()
+	assert := assert.New(t)
+
+	var resp *client.UuidGenResponse
+	var err error
+	var tmp []string
+
+	values := []string{}
+
+	var uuidgenner = suite.uuidgenner
+	resp, err = uuidgenner.PostToDebugUuids(1, "XYZZY")
+	assert.NoError(err, "PostToDebugUuids")
+	tmp = suite.checkValidDebugResponse(t, resp, 1)
+	values = append(values, tmp...)
+	suite.total += 1
+
+	resp, err = uuidgenner.PostToDebugUuids(1, "Yow.")
+	assert.NoError(err, "PostToDebugUuids")
+	tmp = suite.checkValidDebugResponse(t, resp, 1)
+	values = append(values, tmp...)
+	suite.total += 1
+
+	resp, err = uuidgenner.PostToDebugUuids(10, "A")
+	assert.NoError(err, "PostToDebugUuids")
+	tmp = suite.checkValidDebugResponse(t, resp, 10)
+	values = append(values, tmp...)
+	suite.total += 10
+
+	// did prefix work?
+	assert.EqualValues("XYZZY0", values[0][0:6])
+	assert.EqualValues("Yow.1", values[1][0:5])
+	for i := 2; i < len(values); i++ {
+		assert.EqualValues('A', values[i][0])
+	}
+
+	// uuids should be, umm, unique
+	for i := 0; i < len(values); i++ {
+		for j := i + 1; j < len(values); j++ {
+			assert.False(values[j] == values[i], "returned uuids not unique %d %d %s %s", i, j, values[i], values[j])
+		}
+	}
 }
 
 func (suite *UuidgenTester) TestBad() {
@@ -194,39 +220,17 @@ func (suite *UuidgenTester) TestBad() {
 	assert.Error(err)
 }
 
-func (suite *UuidgenTester) TestDebug() {
+func (suite *UuidgenTester) TestAdminSettings() {
 	t := suite.T()
 	assert := assert.New(t)
 
 	var uuidgenner = suite.uuidgenner
 
-	var resp *client.UuidGenResponse
-	var err error
-	var tmp []string
+	// no settings fields anymore, so this is kinda dumb
 
-	values := []string{}
+	settings, err := uuidgenner.GetFromAdminSettings()
+	assert.NoError(err, "GetFromAdminSettings")
 
-	/////////////////
-	settings := &client.UuidGenAdminSettings{Debug: true}
-	err = uuidgenner.PostToAdminSettings(settings)
-	assert.NoError(err, "PostToAdminSettings")
-
-	resp, err = uuidgenner.PostToUuids(1)
-	assert.NoError(err, "PostToUuids")
-	tmp = checkValidDebugResponse(t, resp, 1)
-	values = append(values, tmp...)
-
-	resp, err = uuidgenner.PostToUuids(3)
-	assert.NoError(err, "PostToUuids")
-	tmp = checkValidDebugResponse(t, resp, 3)
-	values = append(values, tmp...)
-
-	if values[0] != "0" || values[1] != "1" || values[2] != "2" || values[3] != "3" {
-		t.Fatalf("invalid debug uuids returned: %v", values)
-	}
-
-	// set it back
-	settings = &client.UuidGenAdminSettings{Debug: false}
 	err = uuidgenner.PostToAdminSettings(settings)
 	assert.NoError(err, "PostToAdminSettings")
 }

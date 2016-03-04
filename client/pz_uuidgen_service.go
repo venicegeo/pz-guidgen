@@ -62,6 +62,35 @@ func (c PzUuidGenService) GetAddress() string {
 func (c *PzUuidGenService) PostToUuids(count int) (*UuidGenResponse, error) {
 
 	url := fmt.Sprintf("%s/uuids?count=%d", c.url, count)
+
+	resp, err := http.Post(url, piazza.ContentTypeJSON, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var m UuidGenResponse
+	err = json.Unmarshal(data, &m)
+	if err != nil {
+		return nil, err
+	}
+
+	return &m, nil
+}
+
+func (c *PzUuidGenService) PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error) {
+
+	url := fmt.Sprintf("%s/uuids?count=%d&debug=true&prefix=%s", c.url, count, prefix)
+
 	resp, err := http.Post(url, piazza.ContentTypeJSON, nil)
 	if err != nil {
 		return nil, err

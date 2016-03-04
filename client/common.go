@@ -28,6 +28,7 @@ type IUuidGenService interface {
 
 	// low-level interfaces
 	PostToUuids(count int) (*UuidGenResponse, error)
+	PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error)
 	GetFromAdminStats() (*UuidGenAdminStats, error)
 	GetFromAdminSettings() (*UuidGenAdminSettings, error)
 	PostToAdminSettings(*UuidGenAdminSettings) error
@@ -44,6 +45,4 @@ type UuidGenAdminStats struct {
 	StartTime   time.Time `json:"starttime"`
 }
 
-type UuidGenAdminSettings struct {
-	Debug bool `json:"debug"`
-}
+type UuidGenAdminSettings struct {}

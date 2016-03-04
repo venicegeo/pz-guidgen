@@ -51,7 +51,18 @@ func (service *MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, err
 		data[i] = fmt.Sprintf("%d", service.currentId)
 		service.currentId++
 	}
-	m := &UuidGenResponse{Data: []string{"xxx"}}
+	m := &UuidGenResponse{Data: data}
+	return m, nil
+}
+
+func (service *MockUuidGenService) PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error) {
+
+	data := make([]string, count)
+	for i := 0; i< count; i++ {
+		data[i] = fmt.Sprintf("%s%d", prefix, service.currentId)
+		service.currentId++
+	}
+	m := &UuidGenResponse{Data: data}
 	return m, nil
 }
 

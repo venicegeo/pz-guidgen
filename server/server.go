@@ -63,9 +63,13 @@ func handleGetAdminStats(c *gin.Context) {
 func handlePostUuids(c *gin.Context) {
 
 	var count int
+	var debug bool
+	var prefix string
 	var err error
+	var key string
 
-	key := c.Query("count")
+	// ?count=INT
+	key = c.Query("count")
 	if key == "" {
 		count = 1
 	} else {
@@ -76,6 +80,27 @@ func handlePostUuids(c *gin.Context) {
 		}
 	}
 
+	// ?debug=BOOL
+	key = c.Query("debug")
+	if key == "" {
+		debug = false
+	} else {
+		debug, err = strconv.ParseBool(key)
+		if err != nil {
+			c.String(http.StatusBadRequest, "query argument invalid: %s", key)
+			return
+		}
+	}
+
+	// ?prefix=STR
+	// valid only if debug is false
+	prefix = c.Query("prefix")
+
+	if !debug && (prefix != "") {
+		c.String(http.StatusBadRequest, "\"?prefix\" query parameter only valid if \"?debug\" is true")
+		return
+	}
+
 	if count < 0 || count > 255 {
 		c.String(http.StatusBadRequest, "query argument out of range: %d", count)
 		return
@@ -83,9 +108,9 @@ func handlePostUuids(c *gin.Context) {
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if settings.Debug {
+		if debug {
 			stats.Lock()
-			uuids[i] = fmt.Sprintf("%d", stats.DebugCount)
+			uuids[i] = fmt.Sprintf("%s%d", prefix, stats.DebugCount)
 			stats.DebugCount++
 			stats.Unlock()
 		} else {
