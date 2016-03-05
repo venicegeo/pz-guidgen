@@ -187,3 +187,13 @@ func (pz *PzUuidGenService) GetUuid() (string, error) {
 
 	return resp.Data[0], nil
 }
+
+func (pz *PzUuidGenService) GetDebugUuid(prefix string) (string, error) {
+
+	resp, err := pz.PostToDebugUuids(1, prefix)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.Data[0], nil
+}

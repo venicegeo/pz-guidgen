@@ -201,6 +201,11 @@ func (suite *UuidgenTester) TestDebugOkay() {
 			assert.False(values[j] == values[i], "returned uuids not unique %d %d %s %s", i, j, values[i], values[j])
 		}
 	}
+
+	s, err := uuidgenner.GetDebugUuid("PFX")
+	assert.NoError(err, "pzService.GetDebugUuid")
+	assert.NotEmpty(s, "GetDebugUuid failed - returned empty string")
+	suite.total += 1
 }
 
 func (suite *UuidgenTester) TestBad() {

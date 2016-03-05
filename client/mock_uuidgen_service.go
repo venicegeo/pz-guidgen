@@ -77,8 +77,17 @@ func (*MockUuidGenService) GetFromAdminSettings() (*UuidGenAdminSettings, error)
 func (*MockUuidGenService) PostToAdminSettings(*UuidGenAdminSettings) error {
 	return nil
 }
+
 func (service *MockUuidGenService) GetUuid() (string, error) {
 	resp, err := service.PostToUuids(1)
+	if err != nil {
+		return "", err
+	}
+	return resp.Data[0], nil
+}
+
+func (service *MockUuidGenService) GetDebugUuid(prefix string) (string, error) {
+	resp, err := service.PostToDebugUuids(1, prefix)
 	if err != nil {
 		return "", err
 	}

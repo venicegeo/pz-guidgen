@@ -25,6 +25,7 @@ type IUuidGenService interface {
 
 	// high-level interfaces
 	GetUuid() (string, error)
+	GetDebugUuid(string) (string, error)
 
 	// low-level interfaces
 	PostToUuids(count int) (*UuidGenResponse, error)
