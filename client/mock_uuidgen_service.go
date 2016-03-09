@@ -51,7 +51,18 @@ func (service *MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, err
 		data[i] = fmt.Sprintf("%d", service.currentId)
 		service.currentId++
 	}
-	m := &UuidGenResponse{Data: []string{"xxx"}}
+	m := &UuidGenResponse{Data: data}
+	return m, nil
+}
+
+func (service *MockUuidGenService) PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error) {
+
+	data := make([]string, count)
+	for i := 0; i< count; i++ {
+		data[i] = fmt.Sprintf("%s%d", prefix, service.currentId)
+		service.currentId++
+	}
+	m := &UuidGenResponse{Data: data}
 	return m, nil
 }
 
@@ -66,8 +77,17 @@ func (*MockUuidGenService) GetFromAdminSettings() (*UuidGenAdminSettings, error)
 func (*MockUuidGenService) PostToAdminSettings(*UuidGenAdminSettings) error {
 	return nil
 }
+
 func (service *MockUuidGenService) GetUuid() (string, error) {
 	resp, err := service.PostToUuids(1)
+	if err != nil {
+		return "", err
+	}
+	return resp.Data[0], nil
+}
+
+func (service *MockUuidGenService) GetDebugUuid(prefix string) (string, error) {
+	resp, err := service.PostToDebugUuids(1, prefix)
 	if err != nil {
 		return "", err
 	}
