@@ -1,8 +1,0 @@
-applications:
-- name: pz-uuidgen
-  host: pz-uuidgen
-  memory: 512M
-  instances: 1
-  timeout: 80
-  command: ./pz-uuidgen
-  buildpack: binary_buildpack
