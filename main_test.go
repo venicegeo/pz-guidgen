@@ -15,6 +15,10 @@
 package main
 
 import (
+	"log"
+	"testing"
+	"time"
+
 	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -22,30 +26,26 @@ import (
 	loggerPkg "github.com/venicegeo/pz-logger/client"
 	"github.com/venicegeo/pz-uuidgen/client"
 	"github.com/venicegeo/pz-uuidgen/server"
-	"log"
-	"testing"
-	"time"
 )
 
 type UuidgenTester struct {
 	suite.Suite
-	total      int
-	logger     loggerPkg.ILoggerService
-	uuidgenner client.IUuidGenService
+	sys     *piazza.SystemConfig
+	total   int
+	logger  loggerPkg.ILoggerService
+	uuidgen client.IUuidGenService
 }
 
 func (suite *UuidgenTester) SetupSuite() {
-	//t := suite.T()
 
-	config, err := piazza.NewConfig(piazza.PzUuidgen, piazza.ConfigModeTest)
+	endpoints := &piazza.ServicesMap{}
+
+	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, endpoints)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sys, err := piazza.NewSystem(config)
-	if err != nil {
-		log.Fatal(err)
-	}
+	suite.sys = sys
 
 	suite.logger, err = loggerPkg.NewMockLoggerService(sys)
 	if err != nil {
@@ -54,7 +54,7 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
 
-	suite.uuidgenner, err = client.NewPzUuidGenService(sys, sys.Config.GetBindToAddress())
+	suite.uuidgen, err = client.NewPzUuidGenService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -108,33 +108,33 @@ func (suite *UuidgenTester) TestOkay() {
 
 	values := []uuid.UUID{}
 
-	var uuidgenner = suite.uuidgenner
+	var uuidgen = suite.uuidgen
 
-	resp, err = uuidgenner.PostToUuids(1)
+	resp, err = uuidgen.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgenner.PostToUuids(1)
+	resp, err = uuidgen.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgenner.PostToUuids(1)
+	resp, err = uuidgen.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgenner.PostToUuids(10)
+	resp, err = uuidgen.PostToUuids(10)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 10)
 	values = append(values, tmp...)
 	suite.total += 10
 
-	resp, err = uuidgenner.PostToUuids(255)
+	resp, err = uuidgen.PostToUuids(255)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 255)
 	values = append(values, tmp...)
@@ -149,11 +149,11 @@ func (suite *UuidgenTester) TestOkay() {
 		}
 	}
 
-	stats, err := uuidgenner.GetFromAdminStats()
+	stats, err := uuidgen.GetFromAdminStats()
 	assert.NoError(err, "PostToUuids")
 	suite.checkValidStatsResponse(t, stats)
 
-	s, err := uuidgenner.GetUuid()
+	s, err := uuidgen.GetUuid()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 	suite.total += 1
@@ -169,20 +169,20 @@ func (suite *UuidgenTester) TestDebugOkay() {
 
 	values := []string{}
 
-	var uuidgenner = suite.uuidgenner
-	resp, err = uuidgenner.PostToDebugUuids(1, "XYZZY")
+	var uuidgen = suite.uuidgen
+	resp, err = uuidgen.PostToDebugUuids(1, "XYZZY")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgenner.PostToDebugUuids(1, "Yow.")
+	resp, err = uuidgen.PostToDebugUuids(1, "Yow.")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgenner.PostToDebugUuids(10, "A")
+	resp, err = uuidgen.PostToDebugUuids(10, "A")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 10)
 	values = append(values, tmp...)
@@ -202,7 +202,7 @@ func (suite *UuidgenTester) TestDebugOkay() {
 		}
 	}
 
-	s, err := uuidgenner.GetDebugUuid("PFX")
+	s, err := uuidgen.GetDebugUuid("PFX")
 	assert.NoError(err, "pzService.GetDebugUuid")
 	assert.NotEmpty(s, "GetDebugUuid failed - returned empty string")
 	suite.total += 1
@@ -214,14 +214,14 @@ func (suite *UuidgenTester) TestBad() {
 
 	var err error
 
-	var uuidgenner = suite.uuidgenner
+	var uuidgen = suite.uuidgen
 
 	// count out of range
-	_, err = uuidgenner.PostToUuids(-1)
+	_, err = uuidgen.PostToUuids(-1)
 	assert.Error(err)
 
 	// count out of range
-	_, err = uuidgenner.PostToUuids(256)
+	_, err = uuidgen.PostToUuids(256)
 	assert.Error(err)
 }
 
@@ -229,13 +229,13 @@ func (suite *UuidgenTester) TestAdminSettings() {
 	t := suite.T()
 	assert := assert.New(t)
 
-	var uuidgenner = suite.uuidgenner
+	var uuidgen = suite.uuidgen
 
 	// no settings fields anymore, so this is kinda dumb
 
-	settings, err := uuidgenner.GetFromAdminSettings()
+	settings, err := uuidgen.GetFromAdminSettings()
 	assert.NoError(err, "GetFromAdminSettings")
 
-	err = uuidgenner.PostToAdminSettings(settings)
+	err = uuidgen.PostToAdminSettings(settings)
 	assert.NoError(err, "PostToAdminSettings")
 }

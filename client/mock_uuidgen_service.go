@@ -15,23 +15,24 @@
 package client
 
 import (
-	"github.com/venicegeo/pz-gocommon"
 	"fmt"
+
+	"github.com/venicegeo/pz-gocommon"
 )
 
 type MockUuidGenService struct {
-	name    piazza.ServiceName
-	address string
+	name      piazza.ServiceName
+	address   string
 	currentId int
 }
 
-func NewMockUuidGenService(sys *piazza.System) (*MockUuidGenService, error) {
+func NewMockUuidGenService(sys *piazza.SystemConfig) (*MockUuidGenService, error) {
 	var _ piazza.IService = new(MockUuidGenService)
 	var _ IUuidGenService = new(MockUuidGenService)
 
 	service := &MockUuidGenService{name: piazza.PzUuidgen, address: "0.0.0.0", currentId: 0}
 
-	sys.Services[piazza.PzUuidgen] = service
+	sys.Endpoints[piazza.PzUuidgen] = "0.0.0.0"
 
 	return service, nil
 }
@@ -47,7 +48,7 @@ func (service MockUuidGenService) GetAddress() string {
 func (service *MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, error) {
 
 	data := make([]string, count)
-	for i := 0; i< count; i++ {
+	for i := 0; i < count; i++ {
 		data[i] = fmt.Sprintf("%d", service.currentId)
 		service.currentId++
 	}
@@ -58,7 +59,7 @@ func (service *MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, err
 func (service *MockUuidGenService) PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error) {
 
 	data := make([]string, count)
-	for i := 0; i< count; i++ {
+	for i := 0; i < count; i++ {
 		data[i] = fmt.Sprintf("%s%d", prefix, service.currentId)
 		service.currentId++
 	}

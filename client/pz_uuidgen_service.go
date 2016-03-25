@@ -19,9 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	piazza "github.com/venicegeo/pz-gocommon"
 	"io/ioutil"
 	"net/http"
+
+	piazza "github.com/venicegeo/pz-gocommon"
 )
 
 type PzUuidGenService struct {
@@ -30,23 +31,25 @@ type PzUuidGenService struct {
 	address string
 }
 
-func NewPzUuidGenService(sys *piazza.System, address string) (*PzUuidGenService, error) {
+func NewPzUuidGenService(sys *piazza.SystemConfig) (*PzUuidGenService, error) {
 	var _ piazza.IService = new(PzUuidGenService)
 	var _ IUuidGenService = new(PzUuidGenService)
 
 	var err error
+
+	address := sys.Endpoints[piazza.PzUuidgen]
 
 	service := &PzUuidGenService{
 		url:     fmt.Sprintf("http://%s/v1", address),
 		name:    piazza.PzUuidgen,
 		address: address}
 
-	err = sys.WaitForService(service)
+	err = piazza.WaitForService(piazza.PzUuidgen, address)
 	if err != nil {
 		return nil, err
 	}
 
-	sys.Services[piazza.PzUuidgen] = service
+	sys.Endpoints[piazza.PzUuidgen] = address
 
 	return service, nil
 }
