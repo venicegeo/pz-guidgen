@@ -16,16 +16,17 @@ package server
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/pborman/uuid"
-	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/client"
-	"github.com/venicegeo/pz-uuidgen/client"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pborman/uuid"
+	piazza "github.com/venicegeo/pz-gocommon"
+	loggerPkg "github.com/venicegeo/pz-logger/client"
+	"github.com/venicegeo/pz-uuidgen/client"
 )
 
 type LockedAdminSettings struct {
@@ -157,7 +158,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func CreateHandlers(sys *piazza.System, logger loggerPkg.ILoggerService) http.Handler {
+func CreateHandlers(sys *piazza.SystemConfig, logger loggerPkg.ILoggerService) http.Handler {
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
