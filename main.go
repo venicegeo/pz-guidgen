@@ -25,10 +25,10 @@ import (
 
 func main() {
 
-    servicesNeeded := piazza.ServicesMap{
-        piazza.PzLogger: ""
-    } 
-    
+	servicesNeeded := &piazza.ServicesMap{
+		piazza.PzLogger: "",
+	}
+
 	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, servicesNeeded)
 	if err != nil {
 		log.Fatal(err)
