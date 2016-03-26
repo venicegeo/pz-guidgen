@@ -138,7 +138,13 @@ func handlePostUuids(c *gin.Context) {
 		}
 	}
 	log.Printf("INFO: uuidgen created %d", count)
-	c.IndentedJSON(http.StatusOK, data)
+
+	type Foo struct {
+		Data map[string]interface{} `json:"data"`
+		Addr string                 `json:"addr"`
+	}
+	foo := Foo{Data: data, Addr: logger.GetAddress()}
+	c.IndentedJSON(http.StatusOK, foo)
 }
 
 func handleGetAdminSettings(c *gin.Context) {
