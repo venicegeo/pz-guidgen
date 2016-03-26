@@ -38,7 +38,9 @@ type UuidgenTester struct {
 
 func (suite *UuidgenTester) SetupSuite() {
 
-	endpoints := &piazza.ServicesMap{}
+	endpoints := &piazza.ServicesMap{
+		piazza.PzLogger: "",
+	}
 
 	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, endpoints)
 	if err != nil {
@@ -47,7 +49,7 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	suite.sys = sys
 
-	suite.logger, err = loggerPkg.NewMockLoggerService(sys)
+	suite.logger, err = loggerPkg.NewPzLoggerService(sys)
 	if err != nil {
 		log.Fatal(err)
 	}

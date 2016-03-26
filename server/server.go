@@ -121,7 +121,6 @@ func handlePostUuids(c *gin.Context) {
 		}
 	}
 
-	uuids = append(uuids, logger.GetAddress())
 	data := make(map[string]interface{})
 	data["data"] = uuids
 
