@@ -29,6 +29,8 @@ import (
 	"github.com/venicegeo/pz-uuidgen/client"
 )
 
+var logger loggerPkg.ILoggerService
+
 type LockedAdminSettings struct {
 	sync.Mutex
 	client.UuidGenAdminSettings
@@ -127,8 +129,14 @@ func handlePostUuids(c *gin.Context) {
 	stats.NumRequests++
 	stats.Unlock()
 
-	// @TODO ignore any failure here
-	//pzService.Log(piazza.SeverityInfo, fmt.Sprintf("uuidgen created %d", count))
+	// @TODO handle failures
+	if logger != nil {
+		err = logger.Log(piazza.PzUuidgen, "0.0.0.0", loggerPkg.SeverityInfo, time.Now(),
+			fmt.Sprintf("generated %d: %s", count, uuids[0]))
+		if err != nil {
+			log.Printf("error writing to logger: %s", err)
+		}
+	}
 	log.Printf("INFO: uuidgen created %d", count)
 	c.IndentedJSON(http.StatusOK, data)
 }
@@ -158,7 +166,9 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func CreateHandlers(sys *piazza.SystemConfig, logger loggerPkg.ILoggerService) http.Handler {
+func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.ILoggerService) http.Handler {
+
+	logger = loggerp
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
