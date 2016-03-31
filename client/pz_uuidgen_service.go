@@ -32,34 +32,20 @@ type PzUuidGenService struct {
 }
 
 func NewPzUuidGenService(sys *piazza.SystemConfig) (*PzUuidGenService, error) {
-	var _ piazza.IService = new(PzUuidGenService)
 	var _ IUuidGenService = new(PzUuidGenService)
 
 	var err error
 
-	address := sys.Endpoints[piazza.PzUuidgen]
+	address := sys.GetService(piazza.PzUuidgen)
 
-	service := &PzUuidGenService{
-		url:     fmt.Sprintf("http://%s/v1", address),
-		name:    piazza.PzUuidgen,
-		address: address}
+	service := &PzUuidGenService{url: fmt.Sprintf("http://%s/v1", address)}
 
 	err = piazza.WaitForService(piazza.PzUuidgen, address)
 	if err != nil {
 		return nil, err
 	}
 
-	sys.Endpoints[piazza.PzUuidgen] = address
-
 	return service, nil
-}
-
-func (c PzUuidGenService) GetName() piazza.ServiceName {
-	return c.name
-}
-
-func (c PzUuidGenService) GetAddress() string {
-	return c.address
 }
 
 func (c *PzUuidGenService) PostToUuids(count int) (*UuidGenResponse, error) {

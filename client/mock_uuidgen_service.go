@@ -27,22 +27,11 @@ type MockUuidGenService struct {
 }
 
 func NewMockUuidGenService(sys *piazza.SystemConfig) (*MockUuidGenService, error) {
-	var _ piazza.IService = new(MockUuidGenService)
 	var _ IUuidGenService = new(MockUuidGenService)
 
 	service := &MockUuidGenService{name: piazza.PzUuidgen, address: "0.0.0.0", currentId: 0}
 
-	sys.Endpoints[piazza.PzUuidgen] = "0.0.0.0"
-
 	return service, nil
-}
-
-func (c MockUuidGenService) GetName() piazza.ServiceName {
-	return c.name
-}
-
-func (service MockUuidGenService) GetAddress() string {
-	return service.address
 }
 
 func (service *MockUuidGenService) PostToUuids(count int) (*UuidGenResponse, error) {

@@ -14,15 +14,9 @@
 
 package client
 
-import (
-	"time"
-	piazza "github.com/venicegeo/pz-gocommon"
-)
+import "time"
 
 type IUuidGenService interface {
-	GetName() piazza.ServiceName
-	GetAddress() string
-
 	// high-level interfaces
 	GetUuid() (string, error)
 	GetDebugUuid(string) (string, error)
@@ -46,4 +40,4 @@ type UuidGenAdminStats struct {
 	StartTime   time.Time `json:"starttime"`
 }
 
-type UuidGenAdminSettings struct {}
+type UuidGenAdminSettings struct{}
