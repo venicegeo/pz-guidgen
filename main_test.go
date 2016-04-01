@@ -38,11 +38,12 @@ type UuidgenTester struct {
 
 func (suite *UuidgenTester) SetupSuite() {
 
-	endpoints := &piazza.ServicesMap{
-		piazza.PzLogger: "",
+	required := []piazza.ServiceName{
+		piazza.PzElasticSearch,
+		piazza.PzLogger,
 	}
 
-	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, endpoints)
+	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required, true)
 	if err != nil {
 		log.Fatal(err)
 	}

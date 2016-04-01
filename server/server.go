@@ -51,7 +51,7 @@ func init() {
 
 func handleGetRoot(c *gin.Context) {
 	c.String(http.StatusOK, "Hi. I'm pz-uuidgen.")
-	log.Print("got health-check request")
+	//log.Print("got health-check request")
 }
 
 func handleGetAdminStats(c *gin.Context) {
