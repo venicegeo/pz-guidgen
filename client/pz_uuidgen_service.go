@@ -36,14 +36,17 @@ func NewPzUuidGenService(sys *piazza.SystemConfig) (*PzUuidGenService, error) {
 
 	var err error
 
-	address := sys.GetService(piazza.PzUuidgen)
-
-	service := &PzUuidGenService{url: fmt.Sprintf("http://%s/v1", address)}
-
-	err = piazza.WaitForService(piazza.PzUuidgen, address)
+	err = sys.WaitForService(piazza.PzUuidgen)
 	if err != nil {
 		return nil, err
 	}
+
+	url, err := sys.GetURL(piazza.PzUuidgen)
+	if err != nil {
+		return nil, err
+	}
+
+	service := &PzUuidGenService{url: url}
 
 	return service, nil
 }
