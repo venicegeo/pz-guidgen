@@ -28,6 +28,8 @@ import (
 	"github.com/venicegeo/pz-uuidgen/server"
 )
 
+const MOCKING = false
+
 type UuidgenTester struct {
 	suite.Suite
 	sys     *piazza.SystemConfig
@@ -50,9 +52,16 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	suite.sys = sys
 
-	suite.logger, err = loggerPkg.NewPzLoggerService(sys)
-	if err != nil {
-		log.Fatal(err)
+	if MOCKING {
+		suite.logger, err = loggerPkg.NewMockLoggerService(sys)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		suite.logger, err = loggerPkg.NewPzLoggerService(sys)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
