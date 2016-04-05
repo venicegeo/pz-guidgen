@@ -40,12 +40,17 @@ type UuidgenTester struct {
 
 func (suite *UuidgenTester) SetupSuite() {
 
-	required := []piazza.ServiceName{
-		piazza.PzElasticSearch,
-		piazza.PzLogger,
+	var required []piazza.ServiceName
+	if MOCKING {
+		required = []piazza.ServiceName{}
+	} else {
+		required = []piazza.ServiceName{
+			piazza.PzElasticSearch,
+			piazza.PzLogger,
+		}
 	}
 
-	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required, true)
+	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required)
 	if err != nil {
 		log.Fatal(err)
 	}
