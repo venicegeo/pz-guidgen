@@ -30,7 +30,7 @@ func main() {
 		piazza.PzLogger,
 	}
 
-	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required, false)
+	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required)
 	if err != nil {
 		log.Fatal(err)
 	}
