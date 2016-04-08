@@ -23,7 +23,7 @@ import (
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/client"
+	loggerPkg "github.com/venicegeo/pz-logger/lib"
 	"github.com/venicegeo/pz-uuidgen/client"
 	"github.com/venicegeo/pz-uuidgen/server"
 )
@@ -34,7 +34,7 @@ type UuidgenTester struct {
 	suite.Suite
 	sys     *piazza.SystemConfig
 	total   int
-	logger  loggerPkg.ILoggerService
+	logger  loggerPkg.IClient
 	uuidgen client.IUuidGenService
 }
 
@@ -58,12 +58,12 @@ func (suite *UuidgenTester) SetupSuite() {
 	suite.sys = sys
 
 	if MOCKING {
-		suite.logger, err = loggerPkg.NewMockLoggerService(sys)
+		suite.logger, err = loggerPkg.NewMockClient(sys)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		suite.logger, err = loggerPkg.NewPzLoggerService(sys)
+		suite.logger, err = loggerPkg.NewClient(sys)
 		if err != nil {
 			log.Fatal(err)
 		}
