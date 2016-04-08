@@ -19,7 +19,7 @@ import (
 	"log"
 
 	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/client"
+	loggerPkg "github.com/venicegeo/pz-logger/lib"
 	"github.com/venicegeo/pz-uuidgen/server"
 )
 
@@ -35,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	loggerService, err := loggerPkg.NewPzLoggerService(sys)
+	loggerService, err := loggerPkg.NewClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}

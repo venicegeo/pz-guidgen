@@ -25,11 +25,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/client"
+	loggerPkg "github.com/venicegeo/pz-logger/lib"
 	"github.com/venicegeo/pz-uuidgen/client"
 )
 
-var logger loggerPkg.ILoggerService
+var logger loggerPkg.IClient
 
 type LockedAdminSettings struct {
 	sync.Mutex
@@ -131,8 +131,9 @@ func handlePostUuids(c *gin.Context) {
 
 	// @TODO handle failures
 	if logger != nil {
-		err = logger.Log(piazza.PzUuidgen, "0.0.0.0", loggerPkg.SeverityInfo, time.Now(),
-			fmt.Sprintf("generated %d: %s", count, uuids[0]))
+		s := fmt.Sprintf("generated %d: %s", count, uuids[0])
+		err = logger.Log(piazza.PzUuidgen, "0.0.0.0", loggerPkg.SeverityInfo, time.Now(), s)
+
 		if err != nil {
 			log.Printf("error writing to logger: %s", err)
 		}
@@ -167,7 +168,7 @@ func handlePostAdminShutdown(c *gin.Context) {
 	piazza.HandlePostAdminShutdown(c)
 }
 
-func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.ILoggerService) http.Handler {
+func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.IClient) http.Handler {
 
 	logger = loggerp
 
