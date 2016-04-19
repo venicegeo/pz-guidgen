@@ -19,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+    "strings"
 	"sync"
 	"time"
 
@@ -70,11 +71,23 @@ func handlePostUuids(c *gin.Context) {
 	var prefix string
 	var err error
 	var key string
-
+    var specified bool
+    
 	// ?count=INT
-	key = c.Query("count")
-	if key == "" {
-		count = 1
+	key, specified = c.GetQuery("count")
+    
+    countInQueryString := strings.Contains( 
+        strings.ToLower(c.Request.URL.RawQuery), "count=" )   
+    
+    // fmt.Printf("key='%s', specified=%v, countInQueryString=%v\n", key, specified, countInQueryString)
+    
+    if key == "" {
+        if ! specified && ! countInQueryString {
+		    count = 1        
+        } else {            
+          c.String(http.StatusBadRequest, "query argument invalid: %s", key)
+          return
+        }
 	} else {
 		count, err = strconv.Atoi(key)
 		if err != nil {
