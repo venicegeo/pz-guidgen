@@ -25,8 +25,6 @@ type IUuidGenService interface {
 	PostToUuids(count int) (*UuidGenResponse, error)
 	PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error)
 	GetFromAdminStats() (*UuidGenAdminStats, error)
-	GetFromAdminSettings() (*UuidGenAdminSettings, error)
-	PostToAdminSettings(*UuidGenAdminSettings) error
 }
 
 type UuidGenResponse struct {
@@ -39,5 +37,3 @@ type UuidGenAdminStats struct {
 	NumRequests int       `json:"num_requests"`
 	StartTime   time.Time `json:"starttime"`
 }
-
-type UuidGenAdminSettings struct{}

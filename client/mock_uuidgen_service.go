@@ -60,14 +60,6 @@ func (*MockUuidGenService) GetFromAdminStats() (*UuidGenAdminStats, error) {
 	return &UuidGenAdminStats{}, nil
 }
 
-func (*MockUuidGenService) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
-	return &UuidGenAdminSettings{}, nil
-}
-
-func (*MockUuidGenService) PostToAdminSettings(*UuidGenAdminSettings) error {
-	return nil
-}
-
 func (service *MockUuidGenService) GetUuid() (string, error) {
 	resp, err := service.PostToUuids(1)
 	if err != nil {

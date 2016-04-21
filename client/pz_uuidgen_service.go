@@ -15,7 +15,6 @@
 package client
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -127,47 +126,6 @@ func (c *PzUuidGenService) GetFromAdminStats() (*UuidGenAdminStats, error) {
 	}
 
 	return stats, nil
-}
-
-func (c *PzUuidGenService) GetFromAdminSettings() (*UuidGenAdminSettings, error) {
-
-	resp, err := http.Get(c.url + "/admin/settings")
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	settings := new(UuidGenAdminSettings)
-	err = json.Unmarshal(data, settings)
-	if err != nil {
-		return nil, err
-	}
-
-	return settings, nil
-}
-
-func (c *PzUuidGenService) PostToAdminSettings(settings *UuidGenAdminSettings) error {
-
-	data, err := json.Marshal(settings)
-	if err != nil {
-		return err
-	}
-
-	resp, err := http.Post(c.url+"/admin/settings", piazza.ContentTypeJSON, bytes.NewBuffer(data))
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return errors.New(resp.Status)
-	}
-
-	return nil
 }
 
 func (pz *PzUuidGenService) GetUuid() (string, error) {

@@ -19,7 +19,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-    "strings"
+	"strings"
 	"sync"
 	"time"
 
@@ -31,13 +31,6 @@ import (
 )
 
 var logger loggerPkg.IClient
-
-type LockedAdminSettings struct {
-	sync.Mutex
-	client.UuidGenAdminSettings
-}
-
-var settings LockedAdminSettings
 
 type LockedAdminStats struct {
 	sync.Mutex
@@ -71,23 +64,23 @@ func handlePostUuids(c *gin.Context) {
 	var prefix string
 	var err error
 	var key string
-    var specified bool
-    
+	var specified bool
+
 	// ?count=INT
 	key, specified = c.GetQuery("count")
-    
-    countInQueryString := strings.Contains( 
-        strings.ToLower(c.Request.URL.RawQuery), "count=" )   
-    
-    // fmt.Printf("key='%s', specified=%v, countInQueryString=%v\n", key, specified, countInQueryString)
-    
-    if key == "" {
-        if ! specified && ! countInQueryString {
-		    count = 1        
-        } else {            
-          c.String(http.StatusBadRequest, "query argument invalid: %s", key)
-          return
-        }
+
+	countInQueryString := strings.Contains(
+		strings.ToLower(c.Request.URL.RawQuery), "count=")
+
+	// fmt.Printf("key='%s', specified=%v, countInQueryString=%v\n", key, specified, countInQueryString)
+
+	if key == "" {
+		if !specified && !countInQueryString {
+			count = 1
+		} else {
+			c.String(http.StatusBadRequest, "query argument invalid: %s", key)
+			return
+		}
 	} else {
 		count, err = strconv.Atoi(key)
 		if err != nil {
@@ -156,31 +149,6 @@ func handlePostUuids(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, data)
 }
 
-func handleGetAdminSettings(c *gin.Context) {
-	settings.Lock()
-	t := settings
-	settings.Unlock()
-	c.JSON(http.StatusOK, t)
-}
-
-func handlePostAdminSettings(c *gin.Context) {
-	t := client.UuidGenAdminSettings{}
-	err := c.BindJSON(&t)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-	settings.Lock()
-	settings.UuidGenAdminSettings = t
-	settings.Unlock()
-
-	c.String(http.StatusOK, "")
-}
-
-// func handlePostAdminShutdown(c *gin.Context) {
-// 	piazza.HandlePostAdminShutdown(c)
-// }
-
 func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.IClient) http.Handler {
 
 	logger = loggerp
@@ -195,11 +163,6 @@ func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.IClient) http.Ha
 	router.POST("/v1/uuids", func(c *gin.Context) { handlePostUuids(c) })
 
 	router.GET("/v1/admin/stats", func(c *gin.Context) { handleGetAdminStats(c) })
-
-	router.GET("/v1/admin/settings", func(c *gin.Context) { handleGetAdminSettings(c) })
-	router.POST("/v1/admin/settings", func(c *gin.Context) { handlePostAdminSettings(c) })
-
-	// router.POST("/v1/admin/shutdown", func(c *gin.Context) { handlePostAdminShutdown(c) })
 
 	return router
 }
