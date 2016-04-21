@@ -241,18 +241,3 @@ func (suite *UuidgenTester) TestBad() {
 	_, err = uuidgen.PostToUuids(256)
 	assert.Error(err)
 }
-
-func (suite *UuidgenTester) TestAdminSettings() {
-	t := suite.T()
-	assert := assert.New(t)
-
-	var uuidgen = suite.uuidgen
-
-	// no settings fields anymore, so this is kinda dumb
-
-	settings, err := uuidgen.GetFromAdminSettings()
-	assert.NoError(err, "GetFromAdminSettings")
-
-	err = uuidgen.PostToAdminSettings(settings)
-	assert.NoError(err, "PostToAdminSettings")
-}
