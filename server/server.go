@@ -150,12 +150,8 @@ func handlePostUuids(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, data)
 }
 
-var Routes = &piazza.RouteData{
-	Get: map[string]gin.HandlerFunc{
-		"/":               handleGetRoot,
-		"/v1/admin/stats": handleGetAdminStats,
-	},
-	Post: map[string]gin.HandlerFunc{
-		"/v1/uuids": handlePostUuids,
-	},
+var Routes = []piazza.RouteData{
+	{"GET", "/", handleGetRoot},
+	{"GET", "/v1/admin/stats", handleGetAdminStats},
+	{"POST", "/v1/uuids", handlePostUuids},
 }
