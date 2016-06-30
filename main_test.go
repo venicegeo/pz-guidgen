@@ -25,7 +25,7 @@ import (
 	piazza "github.com/venicegeo/pz-gocommon"
 	loggerPkg "github.com/venicegeo/pz-logger/lib"
 	"github.com/venicegeo/pz-uuidgen/client"
-	"github.com/venicegeo/pz-uuidgen/server"
+	uuidgenServer "github.com/venicegeo/pz-uuidgen/server"
 )
 
 const MOCKING = true
@@ -36,9 +36,11 @@ type UuidgenTester struct {
 	total   int
 	logger  loggerPkg.IClient
 	uuidgen client.IUuidGenService
+	server  *piazza.GenericServer
 }
 
 func (suite *UuidgenTester) SetupSuite() {
+	var err error
 
 	var required []piazza.ServiceName
 	if MOCKING {
@@ -50,37 +52,45 @@ func (suite *UuidgenTester) SetupSuite() {
 		}
 	}
 
-	sys, err := piazza.NewSystemConfig(piazza.PzUuidgen, required)
+	suite.sys, err = piazza.NewSystemConfig(piazza.PzUuidgen, required)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	suite.sys = sys
-
 	if MOCKING {
-		suite.logger, err = loggerPkg.NewMockClient(sys)
+		suite.logger, err = loggerPkg.NewMockClient(suite.sys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		suite.uuidgen, err = client.NewMockUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		suite.logger, err = loggerPkg.NewClient(sys)
+		suite.logger, err = loggerPkg.NewClient(suite.sys)
+		if err != nil {
+			log.Fatal(err)
+		}
+		suite.uuidgen, err = client.NewPzUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
-	_ = sys.StartServer(server.CreateHandlers(sys, suite.logger))
+	suite.total = 0
 
-	suite.uuidgen, err = client.NewPzUuidGenService(sys)
+	uuidgenServer.Init(suite.logger)
+
+	suite.server = &piazza.GenericServer{Sys: suite.sys}
+	err = suite.server.Configure(uuidgenServer.Routes)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	suite.total = 0
+	_ = suite.server.Start()
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
-	//TODO: kill the go routine running the server
+	suite.server.Stop()
 }
 
 func TestRunSuite(t *testing.T) {
@@ -115,9 +125,13 @@ func (suite *UuidgenTester) checkValidDebugResponse(t *testing.T, resp *client.U
 	return resp.Data
 }
 
-func (suite *UuidgenTester) TestOkay() {
+func (suite *UuidgenTester) Test01Okay() {
 	t := suite.T()
 	assert := assert.New(t)
+
+	if MOCKING {
+		t.Skip("Skipping test, because mocking.")
+	}
 
 	var resp *client.UuidGenResponse
 	var err error
@@ -176,9 +190,13 @@ func (suite *UuidgenTester) TestOkay() {
 	suite.total += 1
 }
 
-func (suite *UuidgenTester) TestDebugOkay() {
+func (suite *UuidgenTester) Test02DebugOkay() {
 	t := suite.T()
 	assert := assert.New(t)
+
+	if MOCKING {
+		t.Skip("Skipping test, because mocking.")
+	}
 
 	var resp *client.UuidGenResponse
 	var err error
@@ -225,9 +243,13 @@ func (suite *UuidgenTester) TestDebugOkay() {
 	suite.total += 1
 }
 
-func (suite *UuidgenTester) TestBad() {
+func (suite *UuidgenTester) Test03Bad() {
 	t := suite.T()
 	assert := assert.New(t)
+
+	if MOCKING {
+		t.Skip("Skipping test, because mocking.")
+	}
 
 	var err error
 

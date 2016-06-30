@@ -20,7 +20,7 @@ import (
 
 	piazza "github.com/venicegeo/pz-gocommon"
 	loggerPkg "github.com/venicegeo/pz-logger/lib"
-	"github.com/venicegeo/pz-uuidgen/server"
+	uuidgenPkg "github.com/venicegeo/pz-uuidgen/server"
 )
 
 func main() {
@@ -40,7 +40,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	done := sys.StartServer(server.CreateHandlers(sys, loggerService))
+	uuidgenPkg.Init(loggerService)
+
+	server := piazza.GenericServer{Sys: sys}
+	err = server.Configure(uuidgenPkg.Routes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	done := server.Start()
 
 	err = <-done
 	if err != nil {
