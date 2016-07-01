@@ -86,7 +86,10 @@ func (suite *UuidgenTester) SetupSuite() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	_ = suite.server.Start()
+	_, err = suite.server.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
