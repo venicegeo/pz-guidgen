@@ -15,12 +15,11 @@
 package main
 
 import (
-	//"github.com/pborman/uuid"
 	"log"
 
-	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/lib"
-	uuidgenPkg "github.com/venicegeo/pz-uuidgen/server"
+	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	loggerPkg "github.com/venicegeo/pz-logger/logger"
+	uuidgenPkg "github.com/venicegeo/pz-uuidgen/uuidgen"
 )
 
 func main() {

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package uuidgen
 
 import (
 	"fmt"
@@ -25,16 +25,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pborman/uuid"
-	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/lib"
-	"github.com/venicegeo/pz-uuidgen/client"
+	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	loggerPkg "github.com/venicegeo/pz-logger/logger"
 )
 
 var logger loggerPkg.IClient
 
 type LockedAdminStats struct {
 	sync.Mutex
-	client.UuidGenAdminStats
+	UuidGenAdminStats
 }
 
 var stats LockedAdminStats

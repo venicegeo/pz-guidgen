@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package uuidgen
 
 import (
 	"log"
@@ -22,10 +22,8 @@ import (
 	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	piazza "github.com/venicegeo/pz-gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/lib"
-	"github.com/venicegeo/pz-uuidgen/client"
-	uuidgenServer "github.com/venicegeo/pz-uuidgen/server"
+	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	loggerPkg "github.com/venicegeo/pz-logger/logger"
 )
 
 const MOCKING = true
@@ -35,7 +33,7 @@ type UuidgenTester struct {
 	sys     *piazza.SystemConfig
 	total   int
 	logger  loggerPkg.IClient
-	uuidgen client.IUuidGenService
+	uuidgen IUuidGenService
 	server  *piazza.GenericServer
 }
 
@@ -62,7 +60,7 @@ func (suite *UuidgenTester) SetupSuite() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidgen, err = client.NewMockUuidGenService(suite.sys)
+		suite.uuidgen, err = NewMockUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +69,7 @@ func (suite *UuidgenTester) SetupSuite() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidgen, err = client.NewPzUuidGenService(suite.sys)
+		suite.uuidgen, err = NewPzUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,10 +77,10 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	suite.total = 0
 
-	uuidgenServer.Init(suite.logger)
+	Init(suite.logger)
 
 	suite.server = &piazza.GenericServer{Sys: suite.sys}
-	err = suite.server.Configure(uuidgenServer.Routes)
+	err = suite.server.Configure(Routes)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -101,13 +99,13 @@ func TestRunSuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *client.UuidGenAdminStats) {
+func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *UuidGenAdminStats) {
 	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
 
 	assert.Equal(t, suite.total, stats.NumUUIDs)
 }
 
-func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *client.UuidGenResponse, count int) []uuid.UUID {
+func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *UuidGenResponse, count int) []uuid.UUID {
 	assert.Len(t, resp.Data, count)
 
 	values := make([]uuid.UUID, count)
@@ -121,7 +119,7 @@ func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *client.UuidGe
 	return values
 }
 
-func (suite *UuidgenTester) checkValidDebugResponse(t *testing.T, resp *client.UuidGenResponse, count int) []string {
+func (suite *UuidgenTester) checkValidDebugResponse(t *testing.T, resp *UuidGenResponse, count int) []string {
 
 	assert.Len(t, resp.Data, count)
 
@@ -136,7 +134,7 @@ func (suite *UuidgenTester) Test01Okay() {
 		t.Skip("Skipping test, because mocking.")
 	}
 
-	var resp *client.UuidGenResponse
+	var resp *UuidGenResponse
 	var err error
 	var tmp []uuid.UUID
 
@@ -201,7 +199,7 @@ func (suite *UuidgenTester) Test02DebugOkay() {
 		t.Skip("Skipping test, because mocking.")
 	}
 
-	var resp *client.UuidGenResponse
+	var resp *UuidGenResponse
 	var err error
 	var tmp []string
 
