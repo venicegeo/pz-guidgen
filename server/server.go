@@ -39,8 +39,9 @@ type LockedAdminStats struct {
 
 var stats LockedAdminStats
 
-func init() {
+func Init(l loggerPkg.IClient) {
 	stats.StartTime = time.Now()
+	logger = l
 }
 
 func handleGetRoot(c *gin.Context) {
@@ -149,20 +150,8 @@ func handlePostUuids(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, data)
 }
 
-func CreateHandlers(sys *piazza.SystemConfig, loggerp loggerPkg.IClient) http.Handler {
-
-	logger = loggerp
-
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-	//router.Use(gin.Logger())
-	//router.Use(gin.Recovery())
-
-	router.GET("/", func(c *gin.Context) { handleGetRoot(c) })
-
-	router.POST("/v1/uuids", func(c *gin.Context) { handlePostUuids(c) })
-
-	router.GET("/v1/admin/stats", func(c *gin.Context) { handleGetAdminStats(c) })
-
-	return router
+var Routes = []piazza.RouteData{
+	{"GET", "/", handleGetRoot},
+	{"GET", "/v1/admin/stats", handleGetAdminStats},
+	{"POST", "/v1/uuids", handlePostUuids},
 }
