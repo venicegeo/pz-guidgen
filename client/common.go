@@ -35,5 +35,5 @@ type UuidGenAdminStats struct {
 	NumUUIDs    int       `json:"num_uuids"`
 	DebugCount  int       `json:"debug_count"`
 	NumRequests int       `json:"num_requests"`
-	StartTime   time.Time `json:"starttime"`
+	CreatedOn   time.Time `json:"createdOn"`
 }

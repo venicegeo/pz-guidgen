@@ -40,7 +40,7 @@ type LockedAdminStats struct {
 var stats LockedAdminStats
 
 func Init(l loggerPkg.IClient) {
-	stats.StartTime = time.Now()
+	stats.CreatedOn = time.Now()
 	logger = l
 }
 
