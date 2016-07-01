@@ -100,7 +100,7 @@ func TestRunSuite(t *testing.T) {
 }
 
 func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *UuidGenAdminStats) {
-	assert.WithinDuration(t, time.Now(), stats.StartTime, 5*time.Second, "service start time too long ago")
+	assert.WithinDuration(t, time.Now(), stats.CreatedOn, 5*time.Second, "service start time too long ago")
 
 	assert.Equal(t, suite.total, stats.NumUUIDs)
 }
