@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package uuidgen
 
 import (
 	"fmt"
 
-	"github.com/venicegeo/pz-gocommon"
+	"github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type MockUuidGenService struct {

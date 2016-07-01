@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package uuidgen
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	piazza "github.com/venicegeo/pz-gocommon"
+	piazza "github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type PzUuidGenService struct {
