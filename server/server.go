@@ -40,7 +40,7 @@ type LockedAdminStats struct {
 var stats LockedAdminStats
 
 func init() {
-	stats.StartTime = time.Now()
+	stats.CreatedOn = time.Now()
 }
 
 func handleGetRoot(c *gin.Context) {
