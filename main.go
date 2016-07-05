@@ -18,8 +18,8 @@ import (
 	"log"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/logger"
-	uuidgenPkg "github.com/venicegeo/pz-uuidgen/uuidgen"
+	pzlogger "github.com/venicegeo/pz-logger/logger"
+	pzuuidgen "github.com/venicegeo/pz-uuidgen/uuidgen"
 )
 
 func main() {
@@ -34,19 +34,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	loggerService, err := loggerPkg.NewClient(sys)
+	loggerClient, err := pzlogger.NewClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	uuidgenPkg.Init(loggerService)
+	uuidService := &pzuuidgen.UuidService{}
+	uuidService.Init(loggerClient)
+	uuidServer := &pzuuidgen.UuidServer{}
+	uuidServer.Init(uuidService)
 
-	server := piazza.GenericServer{Sys: sys}
-	err = server.Configure(uuidgenPkg.Routes)
+	genericServer := &piazza.GenericServer{Sys: sys}
+	err = genericServer.Configure(uuidServer.Routes)
 	if err != nil {
 		log.Fatal(err)
 	}
-	done, err := server.Start()
+	done, err := genericServer.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
