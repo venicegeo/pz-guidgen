@@ -129,7 +129,7 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 
 		if err != nil {
 			log.Printf("error writing to logger: %s", err)
-			return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+			//return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
 		}
 	}
 	log.Printf("INFO: uuidgen created %d", count)
