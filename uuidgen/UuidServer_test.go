@@ -30,11 +30,13 @@ const MOCKING = true
 
 type UuidgenTester struct {
 	suite.Suite
-	sys     *piazza.SystemConfig
-	total   int
-	logger  loggerPkg.IClient
-	uuidgen IUuidGenService
-	server  *piazza.GenericServer
+	sys           *piazza.SystemConfig
+	total         int
+	loggerClient  loggerPkg.IClient
+	uuidClient    IUuidGenService
+	genericServer *piazza.GenericServer
+	uuidServer    *UuidServer
+	uuidService   *UuidService
 }
 
 func (suite *UuidgenTester) SetupSuite() {
@@ -56,20 +58,20 @@ func (suite *UuidgenTester) SetupSuite() {
 	}
 
 	if MOCKING {
-		suite.logger, err = loggerPkg.NewMockClient(suite.sys)
+		suite.loggerClient, err = loggerPkg.NewMockClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidgen, err = NewMockUuidGenService(suite.sys)
+		suite.uuidClient, err = NewMockUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		suite.logger, err = loggerPkg.NewClient(suite.sys)
+		suite.loggerClient, err = loggerPkg.NewClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidgen, err = NewPzUuidGenService(suite.sys)
+		suite.uuidClient, err = NewPzUuidGenService(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -77,21 +79,24 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	suite.total = 0
 
-	Init(suite.logger)
+	suite.uuidService = &UuidService{}
+	suite.uuidService.Init(suite.loggerClient)
+	suite.uuidServer = &UuidServer{}
+	suite.uuidServer.Init(suite.uuidService)
 
-	suite.server = &piazza.GenericServer{Sys: suite.sys}
-	err = suite.server.Configure(Routes)
+	suite.genericServer = &piazza.GenericServer{Sys: suite.sys}
+	err = suite.genericServer.Configure(suite.uuidServer.Routes)
 	if err != nil {
 		log.Fatal(err)
 	}
-	_, err = suite.server.Start()
+	_, err = suite.genericServer.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
-	suite.server.Stop()
+	suite.genericServer.Stop()
 }
 
 func TestRunSuite(t *testing.T) {
@@ -140,33 +145,33 @@ func (suite *UuidgenTester) Test01Okay() {
 
 	values := []uuid.UUID{}
 
-	var uuidgen = suite.uuidgen
+	var uuidClient = suite.uuidClient
 
-	resp, err = uuidgen.PostToUuids(1)
+	resp, err = uuidClient.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgen.PostToUuids(1)
+	resp, err = uuidClient.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgen.PostToUuids(1)
+	resp, err = uuidClient.PostToUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgen.PostToUuids(10)
+	resp, err = uuidClient.PostToUuids(10)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 10)
 	values = append(values, tmp...)
 	suite.total += 10
 
-	resp, err = uuidgen.PostToUuids(255)
+	resp, err = uuidClient.PostToUuids(255)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, resp, 255)
 	values = append(values, tmp...)
@@ -181,11 +186,11 @@ func (suite *UuidgenTester) Test01Okay() {
 		}
 	}
 
-	stats, err := uuidgen.GetFromAdminStats()
+	stats, err := uuidClient.GetFromAdminStats()
 	assert.NoError(err, "PostToUuids")
 	suite.checkValidStatsResponse(t, stats)
 
-	s, err := uuidgen.GetUuid()
+	s, err := uuidClient.GetUuid()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 	suite.total += 1
@@ -205,20 +210,20 @@ func (suite *UuidgenTester) Test02DebugOkay() {
 
 	values := []string{}
 
-	var uuidgen = suite.uuidgen
-	resp, err = uuidgen.PostToDebugUuids(1, "XYZZY")
+	var uuidClient = suite.uuidClient
+	resp, err = uuidClient.PostToDebugUuids(1, "XYZZY")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgen.PostToDebugUuids(1, "Yow.")
+	resp, err = uuidClient.PostToDebugUuids(1, "Yow.")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidgen.PostToDebugUuids(10, "A")
+	resp, err = uuidClient.PostToDebugUuids(10, "A")
 	assert.NoError(err, "PostToDebugUuids")
 	tmp = suite.checkValidDebugResponse(t, resp, 10)
 	values = append(values, tmp...)
@@ -238,7 +243,7 @@ func (suite *UuidgenTester) Test02DebugOkay() {
 		}
 	}
 
-	s, err := uuidgen.GetDebugUuid("PFX")
+	s, err := uuidClient.GetDebugUuid("PFX")
 	assert.NoError(err, "pzService.GetDebugUuid")
 	assert.NotEmpty(s, "GetDebugUuid failed - returned empty string")
 	suite.total += 1
@@ -254,13 +259,13 @@ func (suite *UuidgenTester) Test03Bad() {
 
 	var err error
 
-	var uuidgen = suite.uuidgen
+	var uuidClient = suite.uuidClient
 
 	// count out of range
-	_, err = uuidgen.PostToUuids(-1)
+	_, err = uuidClient.PostToUuids(-1)
 	assert.Error(err)
 
 	// count out of range
-	_, err = uuidgen.PostToUuids(256)
+	_, err = uuidClient.PostToUuids(256)
 	assert.Error(err)
 }
