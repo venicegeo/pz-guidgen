@@ -47,17 +47,17 @@ func (server *UuidServer) handleGetRoot(c *gin.Context) {
 	}
 	message := "Hi. I'm pz-uuidgen."
 	resp := piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
-	c.JSON(resp.StatusCode, resp)
+	c.IndentedJSON(resp.StatusCode, resp)
 }
 
 func (server *UuidServer) handleGetAdminStats(c *gin.Context) {
 	resp := server.service.GetAdminStats()
-	c.JSON(resp.StatusCode, resp)
+	c.IndentedJSON(resp.StatusCode, resp)
 }
 
 // request body is ignored
 // we allow a count of zero, for testing
 func (server *UuidServer) handlePostUuids(c *gin.Context) {
 	resp := server.service.PostUuids(c.Query)
-	c.JSON(resp.StatusCode, resp)
+	c.IndentedJSON(resp.StatusCode, resp)
 }
