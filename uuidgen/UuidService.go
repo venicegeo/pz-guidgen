@@ -84,9 +84,6 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 		uuids[i] = uuid.New()
 	}
 
-	data := make(map[string]interface{})
-	data["data"] = uuids
-
 	service.stats.Lock()
 	service.stats.NumUUIDs += count
 	service.stats.NumRequests++
@@ -104,5 +101,5 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 	}
 	log.Printf("INFO: uuidgen created %d", count)
 
-	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: data}
+	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: uuids}
 }
