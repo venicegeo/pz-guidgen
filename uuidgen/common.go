@@ -16,24 +16,17 @@ package uuidgen
 
 import "time"
 
-type IUuidGenService interface {
+type IClient interface {
 	// high-level interfaces
 	GetUuid() (string, error)
-	GetDebugUuid(string) (string, error)
 
 	// low-level interfaces
-	PostToUuids(count int) (*UuidGenResponse, error)
-	PostToDebugUuids(count int, prefix string) (*UuidGenResponse, error)
-	GetFromAdminStats() (*UuidGenAdminStats, error)
-}
-
-type UuidGenResponse struct {
-	Data []string
+	PostUuids(count int) (*[]string, error)
+	GetStats() (*UuidGenAdminStats, error)
 }
 
 type UuidGenAdminStats struct {
 	NumUUIDs    int       `json:"num_uuids"`
-	DebugCount  int       `json:"debug_count"`
 	NumRequests int       `json:"num_requests"`
 	CreatedOn   time.Time `json:"createdOn"`
 }

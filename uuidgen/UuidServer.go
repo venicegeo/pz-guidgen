@@ -35,8 +35,8 @@ type UuidServer struct {
 func (server *UuidServer) Init(service *UuidService) {
 	server.Routes = []piazza.RouteData{
 		{"GET", "/", server.handleGetRoot},
-		{"GET", "/v1/admin/stats", server.handleGetAdminStats},
-		{"POST", "/v1/uuids", server.handlePostUuids},
+		{"GET", "/admin/stats", server.handleGetAdminStats},
+		{"POST", "/uuids", server.handlePostUuids},
 	}
 	server.service = service
 }
