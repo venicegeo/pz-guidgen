@@ -16,6 +16,7 @@ package uuidgen
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -72,7 +73,9 @@ func (c *Client) getObject(endpoint string, out interface{}) error {
 }
 
 func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) error {
-	resp := piazza.HttpPostJson(c.url+endpoint, obj)
+	url := c.url + endpoint
+	log.Printf("URL2: %s", url)
+	resp := piazza.HttpPostJson(url, obj)
 	if resp.IsError() {
 		return resp.ToError()
 	}
@@ -88,7 +91,7 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	url := fmt.Sprintf("/uuids?count=%d", count)
-
+	log.Printf("URL1: %s", url)
 	out := make([]string, count)
 	err := c.postObject(nil, url, &out)
 	return &out, err
