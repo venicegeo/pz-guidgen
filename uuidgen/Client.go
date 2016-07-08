@@ -44,7 +44,8 @@ func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	}
 
 	service := &Client{url: url}
-
+	log.Printf("CLIENT URL: %s", url)
+	fmt.Printf("CLIENT URL2: %s", url)
 	return service, nil
 }
 
