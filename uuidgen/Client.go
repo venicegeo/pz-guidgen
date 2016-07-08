@@ -78,11 +78,11 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 	log.Printf("URL2: %s", url)
 	resp := piazza.HttpPostJson(url, obj)
 	if resp.IsError() {
-		log.Printf("URL2 ==> /1")
+		log.Printf("URL2 ==> /1 %#v", resp)
 		return resp.ToError()
 	}
 	if resp.StatusCode != http.StatusCreated {
-		log.Printf("URL2 ==> /2")
+		log.Printf("URL2 ==> /2 %#v", resp)
 		return resp.ToError()
 	}
 	log.Printf("URL2 ==> %#v", resp)
