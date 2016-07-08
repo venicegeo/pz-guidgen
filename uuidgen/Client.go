@@ -87,7 +87,7 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
-	url := fmt.Sprintf("%s/uuids?count=%d", c.url, count)
+	url := fmt.Sprintf("/uuids?count=%d", count)
 
 	out := make([]string, count)
 	err := c.postObject(nil, url, &out)
