@@ -1,8 +1,6 @@
 #!/bin/bash
 
-d=`date`
-
-url="https://pz-uuidgen.int.geointservices.io/uuids?count=3"
+url="https://pz-uuidgen.int.geointservices.io/uuids"
 echo
 echo POST $url
 echo "$json"
