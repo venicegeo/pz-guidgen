@@ -16,6 +16,7 @@ package uuidgen
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -43,6 +44,8 @@ func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	}
 
 	service := &Client{url: url}
+	log.Printf("CLIENT URL: %s", url)
+	fmt.Printf("CLIENT URL2: %s", url)
 	return service, nil
 }
 
@@ -72,6 +75,7 @@ func (c *Client) getObject(endpoint string, out interface{}) error {
 
 func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) error {
 	url := c.url + endpoint
+	log.Printf("URL2: %s", url)
 	resp := piazza.HttpPostJson(url, obj)
 	if resp.IsError() {
 		return resp.ToError()
@@ -87,9 +91,10 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
-	url := fmt.Sprintf("/uuids?count=%d", count)
+	endpoint := fmt.Sprintf("/uuids?count=%d", count)
+	log.Printf("URL1: %s", endpoint)
 	out := make([]string, count)
-	err := c.postObject(nil, url, &out)
+	err := c.postObject(nil, endpoint, &out)
 	return &out, err
 }
 
@@ -100,6 +105,8 @@ func (c *Client) GetStats() (*UuidGenAdminStats, error) {
 }
 
 func (c *Client) GetUuid() (string, error) {
+
+	log.Printf("Client:GetUuid")
 
 	data, err := c.PostUuids(1)
 	if err != nil {
