@@ -58,6 +58,7 @@ func (server *UuidServer) handleGetAdminStats(c *gin.Context) {
 // request body is ignored
 // we allow a count of zero, for testing
 func (server *UuidServer) handlePostUuids(c *gin.Context) {
-	resp := server.service.PostUuids(c.Query)
+	params := piazza.NewQueryParams(c.Request)
+	resp := server.service.PostUuids(params)
 	c.IndentedJSON(resp.StatusCode, resp)
 }

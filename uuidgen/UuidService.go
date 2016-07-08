@@ -55,14 +55,14 @@ func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 
 // request body is ignored
 // we allow a count of zero, for testing
-func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonResponse {
+func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
 
 	var count int
 	var err error
 	var key string
 
 	// ?count=INT
-	key = queryFunc("count")
+	key = params.Get("count")
 
 	if key == "" {
 		count = 1
