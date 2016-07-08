@@ -16,6 +16,7 @@ package uuidgen
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -39,6 +40,8 @@ func (server *UuidServer) Init(service *UuidService) {
 		{"POST", "/uuids", server.handlePostUuids},
 	}
 	server.service = service
+	time.Sleep(10 * time.Second)
+	panic(1234)
 }
 
 func (server *UuidServer) handleGetRoot(c *gin.Context) {
