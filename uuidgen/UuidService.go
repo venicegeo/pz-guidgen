@@ -101,5 +101,5 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 	}
 	log.Printf("INFO: uuidgen created %d", count)
 
-	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: uuids}
+	return &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
 }
