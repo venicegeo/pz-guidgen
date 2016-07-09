@@ -44,8 +44,6 @@ func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	}
 
 	service := &Client{url: url}
-	log.Printf("CLIENT URL: %s", url)
-	fmt.Printf("CLIENT URL2: %s", url)
 	return service, nil
 }
 
@@ -75,17 +73,15 @@ func (c *Client) getObject(endpoint string, out interface{}) error {
 
 func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) error {
 	url := c.url + endpoint
-	log.Printf("URL2: %s", url)
+
 	resp := piazza.HttpPostJson(url, obj)
 	if resp.IsError() {
-		log.Printf("URL2 ==> /1 %#v", resp)
 		return resp.ToError()
 	}
 	if resp.StatusCode != http.StatusCreated {
-		log.Printf("URL2 ==> /2 %#v", resp)
 		return resp.ToError()
 	}
-	log.Printf("URL2 ==> %#v", resp)
+
 	return asObject(resp, out)
 }
 
@@ -94,7 +90,6 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	endpoint := fmt.Sprintf("/uuids?count=%d", count)
-	log.Printf("URL1: %s", endpoint)
 	out := make([]string, count)
 	err := c.postObject(nil, endpoint, &out)
 	return &out, err

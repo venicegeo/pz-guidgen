@@ -15,7 +15,6 @@
 package uuidgen
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -40,11 +39,9 @@ func (server *UuidServer) Init(service *UuidService) {
 		{"POST", "/uuids", server.handlePostUuids},
 	}
 	server.service = service
-	log.Printf("UuidServer: Init")
 }
 
 func (server *UuidServer) handleGetRoot(c *gin.Context) {
-	log.Printf("UuidServer: handleGetRoot")
 	type T struct {
 		Message string
 	}
@@ -61,7 +58,6 @@ func (server *UuidServer) handleGetAdminStats(c *gin.Context) {
 // request body is ignored
 // we allow a count of zero, for testing
 func (server *UuidServer) handlePostUuids(c *gin.Context) {
-	log.Printf("UuidServer: handlePostUuids")
 	params := piazza.NewQueryParams(c.Request)
 	resp := server.service.PostUuids(params)
 	c.IndentedJSON(resp.StatusCode, resp)

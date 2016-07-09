@@ -56,7 +56,6 @@ func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 // request body is ignored
 // we allow a count of zero, for testing
 func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
-	log.Printf("Service:PostUuids")
 	var count int
 	var err error
 	var key string
@@ -99,7 +98,7 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 			//return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
 		}
 	}
-	log.Printf("INFO: uuidgen created %d", count)
+	//log.Printf("INFO: uuidgen created %d", count)
 
 	return &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
 }
