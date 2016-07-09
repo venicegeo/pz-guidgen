@@ -1,6 +1,6 @@
 #!/bin/bash
 
-url="https://pz-uuidgen.int.geointservices.io/uuids"
+url="https://pz-uuidgen.$PZDOMAIN/uuids"
 echo
 echo POST $url
 echo "$json"

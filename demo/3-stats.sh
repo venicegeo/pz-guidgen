@@ -1,6 +1,6 @@
 #!/bin/bash
 
-url="https://pz-uuidgen.int.geointservices.io/admin/stats"
+url="https://pz-uuidgen.$PZDOMAIN/admin/stats"
 echo
 echo GET $url
 echo "$json"
