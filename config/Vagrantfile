@@ -10,9 +10,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	  uuid.vm.network :forwarded_port, host: 8094, guest: 8094
 	  uuid.vm.synced_folder "../", "/vagrant/uuid"
 	  uuid.vm.provider "virtualbox" do |v|
-		v.memory = 2048
-		v.cpus = 1
-		v.name = "uuidgen"
+	  	v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+		v.customize ["modifyvm", :id, "--memory", "512"]
       end
   end
 end
