@@ -42,9 +42,6 @@ func (server *UuidServer) Init(service *UuidService) {
 }
 
 func (server *UuidServer) handleGetRoot(c *gin.Context) {
-	type T struct {
-		Message string
-	}
 	message := "Hi. I'm pz-uuidgen."
 	resp := piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
 	c.IndentedJSON(resp.StatusCode, resp)

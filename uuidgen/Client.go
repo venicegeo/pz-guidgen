@@ -16,7 +16,6 @@ package uuidgen
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -102,8 +101,6 @@ func (c *Client) GetStats() (*UuidGenAdminStats, error) {
 }
 
 func (c *Client) GetUuid() (string, error) {
-
-	log.Printf("Client:GetUuid")
 
 	data, err := c.PostUuids(1)
 	if err != nil {
