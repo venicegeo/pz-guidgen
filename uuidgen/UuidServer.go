@@ -35,8 +35,8 @@ type UuidServer struct {
 func (server *UuidServer) Init(service *UuidService) {
 	server.Routes = []piazza.RouteData{
 		{"GET", "/", server.handleGetRoot},
-		{"GET", "/v1/admin/stats", server.handleGetAdminStats},
-		{"POST", "/v1/uuids", server.handlePostUuids},
+		{"GET", "/admin/stats", server.handleGetAdminStats},
+		{"POST", "/uuids", server.handlePostUuids},
 	}
 	server.service = service
 }
@@ -47,17 +47,18 @@ func (server *UuidServer) handleGetRoot(c *gin.Context) {
 	}
 	message := "Hi. I'm pz-uuidgen."
 	resp := piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
-	c.JSON(resp.StatusCode, resp)
+	c.IndentedJSON(resp.StatusCode, resp)
 }
 
 func (server *UuidServer) handleGetAdminStats(c *gin.Context) {
 	resp := server.service.GetAdminStats()
-	c.JSON(resp.StatusCode, resp)
+	c.IndentedJSON(resp.StatusCode, resp)
 }
 
 // request body is ignored
 // we allow a count of zero, for testing
 func (server *UuidServer) handlePostUuids(c *gin.Context) {
-	resp := server.service.PostUuids(c.Query)
-	c.JSON(resp.StatusCode, resp)
+	params := piazza.NewQueryParams(c.Request)
+	resp := server.service.PostUuids(params)
+	c.IndentedJSON(resp.StatusCode, resp)
 }

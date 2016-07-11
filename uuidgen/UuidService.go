@@ -55,16 +55,13 @@ func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 
 // request body is ignored
 // we allow a count of zero, for testing
-func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonResponse {
-
+func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
 	var count int
-	var debug bool
-	var prefix string
 	var err error
 	var key string
 
 	// ?count=INT
-	key = queryFunc("count")
+	key = params.Get("count")
 
 	if key == "" {
 		count = 1
@@ -76,27 +73,6 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 		}
 	}
 
-	// ?debug=BOOL
-	key = queryFunc("debug")
-	if key == "" {
-		debug = false
-	} else {
-		debug, err = strconv.ParseBool(key)
-		if err != nil {
-			s := fmt.Sprintf("query argument invalid: %s", key)
-			return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
-		}
-	}
-
-	// ?prefix=STR
-	// valid only if debug is false
-	prefix = queryFunc("prefix")
-
-	if !debug && (prefix != "") {
-		s := fmt.Sprintf("\"?prefix\" query parameter only valid if \"?debug\" is true")
-		return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
-	}
-
 	if count < 0 || count > 255 {
 		s := fmt.Sprintf("query argument out of range: %d", count)
 		return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
@@ -104,18 +80,8 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 
 	uuids := make([]string, count)
 	for i := 0; i < count; i++ {
-		if debug {
-			service.stats.Lock()
-			uuids[i] = fmt.Sprintf("%s%d", prefix, service.stats.DebugCount)
-			service.stats.DebugCount++
-			service.stats.Unlock()
-		} else {
-			uuids[i] = uuid.New()
-		}
+		uuids[i] = uuid.New()
 	}
-
-	data := make(map[string]interface{})
-	data["data"] = uuids
 
 	service.stats.Lock()
 	service.stats.NumUUIDs += count
@@ -132,7 +98,7 @@ func (service *UuidService) PostUuids(queryFunc piazza.QueryFunc) *piazza.JsonRe
 			//return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
 		}
 	}
-	log.Printf("INFO: uuidgen created %d", count)
+	//log.Printf("INFO: uuidgen created %d", count)
 
-	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: data}
+	return &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
 }

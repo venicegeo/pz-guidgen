@@ -33,7 +33,7 @@ type UuidgenTester struct {
 	sys           *piazza.SystemConfig
 	total         int
 	loggerClient  loggerPkg.IClient
-	uuidClient    IUuidGenService
+	uuidClient    IClient
 	genericServer *piazza.GenericServer
 	uuidServer    *UuidServer
 	uuidService   *UuidService
@@ -62,7 +62,7 @@ func (suite *UuidgenTester) SetupSuite() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidClient, err = NewMockUuidGenService(suite.sys)
+		suite.uuidClient, err = NewMockClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +71,7 @@ func (suite *UuidgenTester) SetupSuite() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidClient, err = NewPzUuidGenService(suite.sys)
+		suite.uuidClient, err = NewClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -105,17 +105,17 @@ func TestRunSuite(t *testing.T) {
 }
 
 func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *UuidGenAdminStats) {
-	assert.WithinDuration(t, time.Now(), stats.CreatedOn, 5*time.Second, "service start time too long ago")
+	assert.WithinDuration(t, time.Now(), stats.CreatedOn, 5*time.Second)
 
 	assert.Equal(t, suite.total, stats.NumUUIDs)
 }
 
-func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *UuidGenResponse, count int) []uuid.UUID {
-	assert.Len(t, resp.Data, count)
+func (suite *UuidgenTester) checkValidResponse(t *testing.T, data *[]string, count int) []uuid.UUID {
+	assert.Len(t, *data, count)
 
 	values := make([]uuid.UUID, count)
 	for i := 0; i < count; i++ {
-		values[i] = uuid.Parse(resp.Data[i])
+		values[i] = uuid.Parse((*data)[i])
 		if values[i] == nil {
 			t.Fatalf("returned uuid has invalid format: %v", values)
 		}
@@ -124,22 +124,10 @@ func (suite *UuidgenTester) checkValidResponse(t *testing.T, resp *UuidGenRespon
 	return values
 }
 
-func (suite *UuidgenTester) checkValidDebugResponse(t *testing.T, resp *UuidGenResponse, count int) []string {
-
-	assert.Len(t, resp.Data, count)
-
-	return resp.Data
-}
-
 func (suite *UuidgenTester) Test01Okay() {
 	t := suite.T()
 	assert := assert.New(t)
 
-	if MOCKING {
-		t.Skip("Skipping test, because mocking.")
-	}
-
-	var resp *UuidGenResponse
 	var err error
 	var tmp []uuid.UUID
 
@@ -147,33 +135,33 @@ func (suite *UuidgenTester) Test01Okay() {
 
 	var uuidClient = suite.uuidClient
 
-	resp, err = uuidClient.PostToUuids(1)
+	data, err := uuidClient.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
-	tmp = suite.checkValidResponse(t, resp, 1)
+	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidClient.PostToUuids(1)
+	data, err = uuidClient.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
-	tmp = suite.checkValidResponse(t, resp, 1)
+	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidClient.PostToUuids(1)
+	data, err = uuidClient.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
-	tmp = suite.checkValidResponse(t, resp, 1)
+	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	resp, err = uuidClient.PostToUuids(10)
+	data, err = uuidClient.PostUuids(10)
 	assert.NoError(err, "PostToUuids")
-	tmp = suite.checkValidResponse(t, resp, 10)
+	tmp = suite.checkValidResponse(t, data, 10)
 	values = append(values, tmp...)
 	suite.total += 10
 
-	resp, err = uuidClient.PostToUuids(255)
+	data, err = uuidClient.PostUuids(255)
 	assert.NoError(err, "PostToUuids")
-	tmp = suite.checkValidResponse(t, resp, 255)
+	tmp = suite.checkValidResponse(t, data, 255)
 	values = append(values, tmp...)
 	suite.total += 255
 
@@ -186,8 +174,8 @@ func (suite *UuidgenTester) Test01Okay() {
 		}
 	}
 
-	stats, err := uuidClient.GetFromAdminStats()
-	assert.NoError(err, "PostToUuids")
+	stats, err := uuidClient.GetStats()
+	assert.NoError(err, "GetStats")
 	suite.checkValidStatsResponse(t, stats)
 
 	s, err := uuidClient.GetUuid()
@@ -196,76 +184,19 @@ func (suite *UuidgenTester) Test01Okay() {
 	suite.total += 1
 }
 
-func (suite *UuidgenTester) Test02DebugOkay() {
+func (suite *UuidgenTester) Test02Bad() {
 	t := suite.T()
 	assert := assert.New(t)
-
-	if MOCKING {
-		t.Skip("Skipping test, because mocking.")
-	}
-
-	var resp *UuidGenResponse
-	var err error
-	var tmp []string
-
-	values := []string{}
-
-	var uuidClient = suite.uuidClient
-	resp, err = uuidClient.PostToDebugUuids(1, "XYZZY")
-	assert.NoError(err, "PostToDebugUuids")
-	tmp = suite.checkValidDebugResponse(t, resp, 1)
-	values = append(values, tmp...)
-	suite.total += 1
-
-	resp, err = uuidClient.PostToDebugUuids(1, "Yow.")
-	assert.NoError(err, "PostToDebugUuids")
-	tmp = suite.checkValidDebugResponse(t, resp, 1)
-	values = append(values, tmp...)
-	suite.total += 1
-
-	resp, err = uuidClient.PostToDebugUuids(10, "A")
-	assert.NoError(err, "PostToDebugUuids")
-	tmp = suite.checkValidDebugResponse(t, resp, 10)
-	values = append(values, tmp...)
-	suite.total += 10
-
-	// did prefix work?
-	assert.EqualValues("XYZZY0", values[0][0:6])
-	assert.EqualValues("Yow.1", values[1][0:5])
-	for i := 2; i < len(values); i++ {
-		assert.EqualValues('A', values[i][0])
-	}
-
-	// uuids should be, umm, unique
-	for i := 0; i < len(values); i++ {
-		for j := i + 1; j < len(values); j++ {
-			assert.False(values[j] == values[i], "returned uuids not unique %d %d %s %s", i, j, values[i], values[j])
-		}
-	}
-
-	s, err := uuidClient.GetDebugUuid("PFX")
-	assert.NoError(err, "pzService.GetDebugUuid")
-	assert.NotEmpty(s, "GetDebugUuid failed - returned empty string")
-	suite.total += 1
-}
-
-func (suite *UuidgenTester) Test03Bad() {
-	t := suite.T()
-	assert := assert.New(t)
-
-	if MOCKING {
-		t.Skip("Skipping test, because mocking.")
-	}
 
 	var err error
 
 	var uuidClient = suite.uuidClient
 
 	// count out of range
-	_, err = uuidClient.PostToUuids(-1)
+	_, err = uuidClient.PostUuids(-1)
 	assert.Error(err)
 
 	// count out of range
-	_, err = uuidClient.PostToUuids(256)
+	_, err = uuidClient.PostUuids(256)
 	assert.Error(err)
 }
