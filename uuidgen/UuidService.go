@@ -50,7 +50,13 @@ func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 	service.stats.Lock()
 	t := service.stats.UuidGenAdminStats
 	service.stats.Unlock()
-	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+
+	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+	err := resp.SetType()
+	if err != nil {
+		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+	}
+	return resp
 }
 
 // request body is ignored
@@ -100,5 +106,10 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 	}
 	//log.Printf("INFO: uuidgen created %d", count)
 
-	return &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
+	resp := &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
+	err = resp.SetType()
+	if err != nil {
+		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+	}
+	return resp
 }

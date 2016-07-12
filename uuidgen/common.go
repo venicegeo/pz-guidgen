@@ -14,7 +14,11 @@
 
 package uuidgen
 
-import "time"
+import (
+	"time"
+
+	"github.com/venicegeo/pz-gocommon/gocommon"
+)
 
 type IClient interface {
 	// high-level interfaces
@@ -29,4 +33,10 @@ type UuidGenAdminStats struct {
 	NumUUIDs    int       `json:"num_uuids"`
 	NumRequests int       `json:"num_requests"`
 	CreatedOn   time.Time `json:"createdOn"`
+}
+
+//---------------------------------------------------------------------------
+
+func init() {
+	piazza.JsonResponseDataTypes["uuidgen.UuidGenAdminStats"] = "uuidstats"
 }

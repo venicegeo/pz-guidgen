@@ -15,6 +15,7 @@
 package uuidgen
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -81,6 +82,9 @@ func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) e
 		return resp.ToError()
 	}
 
+	if resp.Type != "[]string" {
+		return errors.New(fmt.Sprintf("Unsupported response data type: %s", resp.Type))
+	}
 	return asObject(resp, out)
 }
 
