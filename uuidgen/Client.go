@@ -17,16 +17,15 @@ package uuidgen
 import (
 	"errors"
 	"fmt"
-	"net/http"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type Client struct {
 	url string
-	//	name    piazza.ServiceName
-	//	address string
 }
+
+//---------------------------------------------------------------------
 
 func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	var _ IClient = new(Client)
@@ -47,61 +46,35 @@ func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	return service, nil
 }
 
-//----------------------------------------
-// TODO: move these to gocommon
-
-func asObject(resp *piazza.JsonResponse, out interface{}) error {
-	err := piazza.SuperConverter(resp.Data, out)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Client) getObject(endpoint string, out interface{}) error {
-	resp := piazza.HttpGetJson(c.url + endpoint)
-	if resp.IsError() {
-		return resp.ToError()
-	}
-	if resp.StatusCode != http.StatusOK {
-		return resp.ToError()
-	}
-
-	return asObject(resp, out)
-}
-
-func (c *Client) postObject(obj interface{}, endpoint string, out interface{}) error {
-	url := c.url + endpoint
-
-	resp := piazza.HttpPostJson(url, obj)
-	if resp.IsError() {
-		return resp.ToError()
-	}
-	if resp.StatusCode != http.StatusCreated {
-		return resp.ToError()
-	}
-
-	// the only thing we return from a POST is a string-list
-	if resp.Type != "string-list" {
-		return errors.New(fmt.Sprintf("Unsupported response data type: %s", resp.Type))
-	}
-	return asObject(resp, out)
-}
-
-//---------------------------------------------------
+//---------------------------------------------------------------------
 
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	endpoint := fmt.Sprintf("/uuids?count=%d", count)
+
+	resp := piazza.HttpPostJson(c.url+endpoint, nil)
+	if resp.IsError() {
+		return nil, resp.ToError()
+	}
+
+	// the only thing we return from a POST is a string-list
+	if resp.Type != "string-list" {
+		err := errors.New(fmt.Sprintf("Unsupported response data type: %s", resp.Type))
+		return nil, err
+	}
+
 	out := make([]string, count)
-	err := c.postObject(nil, endpoint, &out)
+	err := resp.ExtractData(out)
 	return &out, err
 }
 
 func (c *Client) GetStats() (*UuidGenAdminStats, error) {
+	resp := piazza.HttpGetJson(c.url + "/admin/stats")
+	if resp.IsError() {
+		return nil, resp.ToError()
+	}
 	out := &UuidGenAdminStats{}
-	err := c.getObject("/admin/stats", out)
+	err := resp.ExtractData(out)
 	return out, err
 }
 
