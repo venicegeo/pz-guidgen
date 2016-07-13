@@ -65,7 +65,8 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 	}
 
 	out := make([]string, count)
-	err := resp.ExtractData(out)
+	err := resp.ExtractData(&out)
+	log.Printf("PostUuid returning %#v / %#v", err, out)
 	return &out, err
 }
 
