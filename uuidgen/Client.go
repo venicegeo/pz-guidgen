@@ -17,6 +17,7 @@ package uuidgen
 import (
 	"errors"
 	"fmt"
+	"log"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
 )
@@ -85,5 +86,6 @@ func (c *Client) GetUuid() (string, error) {
 		return "", err
 	}
 
+	log.Printf("GetUuid returning %s / %#v", (*data)[0], data)
 	return (*data)[0], nil
 }
