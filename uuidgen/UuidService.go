@@ -27,7 +27,7 @@ import (
 	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
-//--------------------------------------------------
+//---------------------------------------------------------------------
 
 type LockedAdminStats struct {
 	sync.Mutex
@@ -35,22 +35,35 @@ type LockedAdminStats struct {
 }
 
 type UuidService struct {
-	loggerClient pzlogger.IClient
-	stats        LockedAdminStats
+	logger pzlogger.IClient
+	stats  LockedAdminStats
 }
 
-//--------------------------------------------------
+//---------------------------------------------------------------------
 
-func (service *UuidService) Init(loggerClient pzlogger.IClient) {
-	service.loggerClient = loggerClient
+func (service *UuidService) Init(logger pzlogger.IClient) error {
+	service.logger = logger
 	service.stats.CreatedOn = time.Now()
+
+	err := service.logger.Info("uuidgen started")
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 	service.stats.Lock()
 	t := service.stats.UuidGenAdminStats
 	service.stats.Unlock()
-	return &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+
+	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+	err := resp.SetType()
+	if err != nil {
+		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+	}
+	return resp
 }
 
 // request body is ignored
@@ -88,17 +101,15 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 	service.stats.NumRequests++
 	service.stats.Unlock()
 
-	// @TODO handle failures
-	if service.loggerClient != nil {
-		s := fmt.Sprintf("generated %d: %s", count, uuids[0])
-		err = service.loggerClient.Log(piazza.PzUuidgen, "0.0.0.0", pzlogger.SeverityInfo, time.Now(), s)
-
-		if err != nil {
-			log.Printf("error writing to logger: %s", err)
-			//return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
-		}
-	}
 	//log.Printf("INFO: uuidgen created %d", count)
 
-	return &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
+	resp := &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
+	err = resp.SetType()
+	if err != nil {
+		log.Printf("UuidService.PostUuids: returning %#v", nil)
+		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+	}
+
+	log.Printf("UuidService.PostUuids: returning %#v", resp)
+	return resp
 }
