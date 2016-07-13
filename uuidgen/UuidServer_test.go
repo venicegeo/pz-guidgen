@@ -80,7 +80,11 @@ func (suite *UuidgenTester) SetupSuite() {
 	suite.total = 0
 
 	suite.uuidService = &UuidService{}
-	suite.uuidService.Init(suite.loggerClient)
+	err = suite.uuidService.Init(suite.loggerClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	suite.uuidServer = &UuidServer{}
 	suite.uuidServer.Init(suite.uuidService)
 

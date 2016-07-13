@@ -40,7 +40,11 @@ func main() {
 	}
 
 	uuidService := &pzuuidgen.UuidService{}
-	uuidService.Init(loggerClient)
+	err = uuidService.Init(loggerClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	uuidServer := &pzuuidgen.UuidServer{}
 	uuidServer.Init(uuidService)
 
