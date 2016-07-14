@@ -34,22 +34,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	loggerClient, err := pzlogger.NewClient(sys)
+	logger, err := pzlogger.NewClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	uuidService := &pzuuidgen.UuidService{}
-	err = uuidService.Init(loggerClient)
+	service := &pzuuidgen.Service{}
+	err = service.Init(logger)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	uuidServer := &pzuuidgen.UuidServer{}
-	uuidServer.Init(uuidService)
+	server := &pzuuidgen.Server{}
+	server.Init(service)
 
 	genericServer := &piazza.GenericServer{Sys: sys}
-	err = genericServer.Configure(uuidServer.Routes)
+	err = genericServer.Configure(server.Routes)
 	if err != nil {
 		log.Fatal(err)
 	}

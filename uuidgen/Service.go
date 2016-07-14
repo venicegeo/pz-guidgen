@@ -29,19 +29,19 @@ import (
 
 //---------------------------------------------------------------------
 
-type LockedAdminStats struct {
+type Stats struct {
 	sync.Mutex
 	UuidGenAdminStats
 }
 
-type UuidService struct {
+type Service struct {
 	logger pzlogger.IClient
-	stats  LockedAdminStats
+	stats  Stats
 }
 
 //---------------------------------------------------------------------
 
-func (service *UuidService) Init(logger pzlogger.IClient) error {
+func (service *Service) Init(logger pzlogger.IClient) error {
 	service.logger = logger
 	service.stats.CreatedOn = time.Now()
 
@@ -53,7 +53,7 @@ func (service *UuidService) Init(logger pzlogger.IClient) error {
 	return nil
 }
 
-func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
+func (service *Service) GetStats() *piazza.JsonResponse {
 	service.stats.Lock()
 	t := service.stats.UuidGenAdminStats
 	service.stats.Unlock()
@@ -68,7 +68,7 @@ func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
 
 // request body is ignored
 // we allow a count of zero, for testing
-func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
+func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
 	var count int
 	var err error
 	var key string

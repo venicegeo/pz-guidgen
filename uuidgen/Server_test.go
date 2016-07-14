@@ -23,7 +23,7 @@ import (
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/logger"
+	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
 const MOCKING = true
@@ -32,11 +32,11 @@ type UuidgenTester struct {
 	suite.Suite
 	sys           *piazza.SystemConfig
 	total         int
-	loggerClient  loggerPkg.IClient
-	uuidClient    IClient
+	logger        pzlogger.IClient
+	client        IClient
 	genericServer *piazza.GenericServer
-	uuidServer    *UuidServer
-	uuidService   *UuidService
+	server        *Server
+	service       *Service
 }
 
 func (suite *UuidgenTester) SetupSuite() {
@@ -58,20 +58,20 @@ func (suite *UuidgenTester) SetupSuite() {
 	}
 
 	if MOCKING {
-		suite.loggerClient, err = loggerPkg.NewMockClient(suite.sys)
+		suite.logger, err = pzlogger.NewMockClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidClient, err = NewMockClient(suite.sys)
+		suite.client, err = NewMockClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		suite.loggerClient, err = loggerPkg.NewClient(suite.sys)
+		suite.logger, err = pzlogger.NewClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
-		suite.uuidClient, err = NewClient(suite.sys)
+		suite.client, err = NewClient(suite.sys)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -79,17 +79,17 @@ func (suite *UuidgenTester) SetupSuite() {
 
 	suite.total = 0
 
-	suite.uuidService = &UuidService{}
-	err = suite.uuidService.Init(suite.loggerClient)
+	suite.service = &Service{}
+	err = suite.service.Init(suite.logger)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	suite.uuidServer = &UuidServer{}
-	suite.uuidServer.Init(suite.uuidService)
+	suite.server = &Server{}
+	suite.server.Init(suite.service)
 
 	suite.genericServer = &piazza.GenericServer{Sys: suite.sys}
-	err = suite.genericServer.Configure(suite.uuidServer.Routes)
+	err = suite.genericServer.Configure(suite.server.Routes)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,33 +137,33 @@ func (suite *UuidgenTester) Test01Okay() {
 
 	values := []uuid.UUID{}
 
-	var uuidClient = suite.uuidClient
+	var client = suite.client
 
-	data, err := uuidClient.PostUuids(1)
+	data, err := client.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	data, err = uuidClient.PostUuids(1)
+	data, err = client.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	data, err = uuidClient.PostUuids(1)
+	data, err = client.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
 	suite.total += 1
 
-	data, err = uuidClient.PostUuids(10)
+	data, err = client.PostUuids(10)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 10)
 	values = append(values, tmp...)
 	suite.total += 10
 
-	data, err = uuidClient.PostUuids(255)
+	data, err = client.PostUuids(255)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 255)
 	values = append(values, tmp...)
@@ -178,11 +178,11 @@ func (suite *UuidgenTester) Test01Okay() {
 		}
 	}
 
-	stats, err := uuidClient.GetStats()
+	stats, err := client.GetStats()
 	assert.NoError(err, "GetStats")
 	suite.checkValidStatsResponse(t, stats)
 
-	s, err := uuidClient.GetUuid()
+	s, err := client.GetUuid()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
 	suite.total += 1
@@ -194,13 +194,13 @@ func (suite *UuidgenTester) Test02Bad() {
 
 	var err error
 
-	var uuidClient = suite.uuidClient
+	var client = suite.client
 
 	// count out of range
-	_, err = uuidClient.PostUuids(-1)
+	_, err = client.PostUuids(-1)
 	assert.Error(err)
 
 	// count out of range
-	_, err = uuidClient.PostUuids(256)
+	_, err = client.PostUuids(256)
 	assert.Error(err)
 }

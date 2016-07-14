@@ -19,42 +19,42 @@ import (
 
 	"github.com/gin-gonic/gin"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
-	loggerPkg "github.com/venicegeo/pz-logger/logger"
+	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
 //--------------------------------------------------
 
-type UuidServer struct {
-	loggerClient loggerPkg.IClient
-	Routes       []piazza.RouteData
-	service      *UuidService
+type Server struct {
+	logger  pzlogger.IClient
+	Routes  []piazza.RouteData
+	service *Service
 }
 
 //--------------------------------------------------
 
-func (server *UuidServer) Init(service *UuidService) {
+func (server *Server) Init(service *Service) {
 	server.Routes = []piazza.RouteData{
 		{"GET", "/", server.handleGetRoot},
-		{"GET", "/admin/stats", server.handleGetAdminStats},
+		{"GET", "/admin/stats", server.handleGetStats},
 		{"POST", "/uuids", server.handlePostUuids},
 	}
 	server.service = service
 }
 
-func (server *UuidServer) handleGetRoot(c *gin.Context) {
+func (server *Server) handleGetRoot(c *gin.Context) {
 	message := "Hi. I'm pz-uuidgen."
 	resp := piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
 	c.IndentedJSON(resp.StatusCode, resp)
 }
 
-func (server *UuidServer) handleGetAdminStats(c *gin.Context) {
-	resp := server.service.GetAdminStats()
+func (server *Server) handleGetStats(c *gin.Context) {
+	resp := server.service.GetStats()
 	c.IndentedJSON(resp.StatusCode, resp)
 }
 
 // request body is ignored
 // we allow a count of zero, for testing
-func (server *UuidServer) handlePostUuids(c *gin.Context) {
+func (server *Server) handlePostUuids(c *gin.Context) {
 	params := piazza.NewQueryParams(c.Request)
 	resp := server.service.PostUuids(params)
 	c.IndentedJSON(resp.StatusCode, resp)
