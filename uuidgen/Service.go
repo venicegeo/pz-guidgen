@@ -29,19 +29,20 @@ import (
 
 //---------------------------------------------------------------------
 
-type LockedAdminStats struct {
+type Stats struct {
 	sync.Mutex
 	UuidGenAdminStats
 }
 
-type UuidService struct {
+type Service struct {
 	logger pzlogger.IClient
-	stats  LockedAdminStats
+	stats  Stats
+	origin string
 }
 
 //---------------------------------------------------------------------
 
-func (service *UuidService) Init(logger pzlogger.IClient) error {
+func (service *Service) Init(sys *piazza.SystemConfig, logger pzlogger.IClient) error {
 	service.logger = logger
 	service.stats.CreatedOn = time.Now()
 
@@ -50,25 +51,31 @@ func (service *UuidService) Init(logger pzlogger.IClient) error {
 		return err
 	}
 
+	service.origin = string(sys.Name)
+
 	return nil
 }
 
-func (service *UuidService) GetAdminStats() *piazza.JsonResponse {
+func (service *Service) GetStats() *piazza.JsonResponse {
 	service.stats.Lock()
-	t := service.stats.UuidGenAdminStats
+	data := service.stats.UuidGenAdminStats
 	service.stats.Unlock()
 
-	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: data}
 	err := resp.SetType()
 	if err != nil {
-		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Origin:     service.origin,
+		}
 	}
 	return resp
 }
 
 // request body is ignored
 // we allow a count of zero, for testing
-func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
+func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
 	var count int
 	var err error
 	var key string
@@ -82,13 +89,21 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 		count, err = strconv.Atoi(key)
 		if err != nil {
 			s := fmt.Sprintf("query argument invalid: %s", key)
-			return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
+			return &piazza.JsonResponse{
+				StatusCode: http.StatusBadRequest,
+				Message:    s,
+				Origin:     service.origin,
+			}
 		}
 	}
 
 	if count < 0 || count > 255 {
 		s := fmt.Sprintf("query argument out of range: %d", count)
-		return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusBadRequest,
+			Message:    s,
+			Origin:     service.origin,
+		}
 	}
 
 	uuids := make([]string, count)
@@ -107,7 +122,11 @@ func (service *UuidService) PostUuids(params *piazza.HttpQueryParams) *piazza.Js
 	err = resp.SetType()
 	if err != nil {
 		log.Printf("UuidService.PostUuids: returning %#v", nil)
-		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Origin:     service.origin,
+		}
 	}
 
 	log.Printf("UuidService.PostUuids: returning %#v", resp)
