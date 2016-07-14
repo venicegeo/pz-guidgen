@@ -40,7 +40,7 @@ func main() {
 	}
 
 	service := &pzuuidgen.Service{}
-	err = service.Init(logger)
+	err = service.Init(sys, logger)
 	if err != nil {
 		log.Fatal(err)
 	}

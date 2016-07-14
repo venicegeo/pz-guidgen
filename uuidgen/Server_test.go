@@ -80,7 +80,7 @@ func (suite *UuidgenTester) SetupSuite() {
 	suite.total = 0
 
 	suite.service = &Service{}
-	err = suite.service.Init(suite.logger)
+	err = suite.service.Init(suite.sys, suite.logger)
 	if err != nil {
 		log.Fatal(err)
 	}

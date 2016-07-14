@@ -37,11 +37,12 @@ type Stats struct {
 type Service struct {
 	logger pzlogger.IClient
 	stats  Stats
+	origin string
 }
 
 //---------------------------------------------------------------------
 
-func (service *Service) Init(logger pzlogger.IClient) error {
+func (service *Service) Init(sys *piazza.SystemConfig, logger pzlogger.IClient) error {
 	service.logger = logger
 	service.stats.CreatedOn = time.Now()
 
@@ -50,18 +51,24 @@ func (service *Service) Init(logger pzlogger.IClient) error {
 		return err
 	}
 
+	service.origin = string(sys.Name)
+
 	return nil
 }
 
 func (service *Service) GetStats() *piazza.JsonResponse {
 	service.stats.Lock()
-	t := service.stats.UuidGenAdminStats
+	data := service.stats.UuidGenAdminStats
 	service.stats.Unlock()
 
-	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: t}
+	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: data}
 	err := resp.SetType()
 	if err != nil {
-		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Origin:     service.origin,
+		}
 	}
 	return resp
 }
@@ -82,13 +89,21 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		count, err = strconv.Atoi(key)
 		if err != nil {
 			s := fmt.Sprintf("query argument invalid: %s", key)
-			return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
+			return &piazza.JsonResponse{
+				StatusCode: http.StatusBadRequest,
+				Message:    s,
+				Origin:     service.origin,
+			}
 		}
 	}
 
 	if count < 0 || count > 255 {
 		s := fmt.Sprintf("query argument out of range: %d", count)
-		return &piazza.JsonResponse{StatusCode: http.StatusBadRequest, Message: s}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusBadRequest,
+			Message:    s,
+			Origin:     service.origin,
+		}
 	}
 
 	uuids := make([]string, count)
@@ -107,7 +122,11 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 	err = resp.SetType()
 	if err != nil {
 		log.Printf("UuidService.PostUuids: returning %#v", nil)
-		return &piazza.JsonResponse{StatusCode: http.StatusInternalServerError, Message: err.Error()}
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Origin:     service.origin,
+		}
 	}
 
 	log.Printf("UuidService.PostUuids: returning %#v", resp)
