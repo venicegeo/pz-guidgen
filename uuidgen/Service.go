@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
@@ -76,28 +75,29 @@ func (service *Service) GetStats() *piazza.JsonResponse {
 // request body is ignored
 // we allow a count of zero, for testing
 func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
-	var count int
+	var count *int
 	var err error
-	var key string
 
 	// ?count=INT
-	key = params.Get("count")
-
-	if key == "" {
-		count = 1
-	} else {
-		count, err = strconv.Atoi(key)
-		if err != nil {
-			s := fmt.Sprintf("query argument invalid: %s", key)
-			return &piazza.JsonResponse{
-				StatusCode: http.StatusBadRequest,
-				Message:    s,
-				Origin:     service.origin,
-			}
+	defalt := 1
+	count, err = params.GetCount(&defalt)
+	if err != nil {
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+			Origin:     service.origin,
 		}
 	}
 
-	if count < 0 || count > 255 {
+	if count == nil {
+		return &piazza.JsonResponse{
+			StatusCode: http.StatusBadRequest,
+			Message:    "query argument invalid: 'count'",
+			Origin:     service.origin,
+		}
+	}
+
+	if *count < 0 || *count > 255 {
 		s := fmt.Sprintf("query argument out of range: %d", count)
 		return &piazza.JsonResponse{
 			StatusCode: http.StatusBadRequest,
@@ -106,13 +106,13 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		}
 	}
 
-	uuids := make([]string, count)
-	for i := 0; i < count; i++ {
+	uuids := make([]string, *count)
+	for i := 0; i < *count; i++ {
 		uuids[i] = uuid.New()
 	}
 
 	service.stats.Lock()
-	service.stats.NumUUIDs += count
+	service.stats.NumUUIDs += *count
 	service.stats.NumRequests++
 	service.stats.Unlock()
 
