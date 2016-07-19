@@ -30,8 +30,8 @@ type IClient interface {
 }
 
 type UuidGenAdminStats struct {
-	NumUUIDs    int       `json:"num_uuids"`
-	NumRequests int       `json:"num_requests"`
+	NumUUIDs    int       `json:"numUuids"`
+	NumRequests int       `json:"numRequests"`
 	CreatedOn   time.Time `json:"createdOn"`
 }
 
