@@ -24,6 +24,15 @@ export VCAP_SERVICES='{"user-provided": [{"credentials": {"host": "192.168.44.44
 export VCAP_APPLICATION='{"application_id": "fe5dfc8d-e36e-4f21-9223-2ed4f7a984dd","application_name": "pz-uuidgen","application_uris": ["pz-uuidgen.int.geointservices.io","pz-uuidgen-Sprint03-74-g7862a67.int.geointservices.io"],"application_version": "f3905ce7-52f3-4d35-8309-1003963250ca","limits": {"disk": 1024,"fds": 16384,"mem": 512},"name": "pz-uuidgen","space_id": "5f97f401-4277-4a13-bbd9-5e5ff62f21a2","space_name": "int","uris": ["pz-uuidgen.int.geointservices.io","pz-uuidgen-Sprint03-74-g7862a67.int.geointservices.io"],"users": null,"version": "f3905ce7-52f3-4d35-8309-1003963250ca"}'
 export PORT=14800
 
+#copying required set env script to profile.d for startup of the box
+chmod 777 /vagrant/uuid/config/uuid-env-variables.sh
+cp /vagrant/uuid/config/uuid-env-variables.sh /etc/profile.d/uuid-env-variables.sh
+
+cd /etc
+echo '#!/bin/sh -e' > rc.local
+echo 'su - root -c /home/vagrant/workspace/gostuff/bin/pz-uuidgen &' >> rc.local
+echo 'exit 0' >> rc.local
+
 # getting pz-uuidgen and trying to build it
 go get github.com/venicegeo/pz-uuidgen
 go install github.com/venicegeo/pz-uuidgen
@@ -33,5 +42,5 @@ cd /home/vagrant/workspace/gostuff/bin
 echo List of built executables:
 ls -la
 
-echo starting pz-uuidgen...
-./pz-uuidgen
+#start the app on initial box setup.
+/home/vagrant/workspace/gostuff/bin/pz-uuidgen
