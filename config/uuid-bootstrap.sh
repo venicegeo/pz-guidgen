@@ -43,4 +43,5 @@ echo List of built executables:
 ls -la
 
 #start the app on initial box setup.
-/home/vagrant/workspace/gostuff/bin/pz-uuidgen
+cd /home/vagrant/workspace/gostuff/bin/
+nohup ./pz-uuidgen &
