@@ -53,7 +53,8 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	endpoint := fmt.Sprintf("/uuids?count=%d", count)
 
-	resp := piazza.HttpPostJson(c.url+endpoint, nil)
+	h := piazza.Http{BaseUrl: c.url}
+	resp := h.PzPost(endpoint, nil)
 	if resp.IsError() {
 		return nil, resp.ToError()
 	}
@@ -71,7 +72,8 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 }
 
 func (c *Client) GetStats() (*UuidGenAdminStats, error) {
-	resp := piazza.HttpGetJson(c.url + "/admin/stats")
+	h := piazza.Http{BaseUrl: c.url}
+	resp := h.PzGet("/admin/stats")
 	if resp.IsError() {
 		return nil, resp.ToError()
 	}
