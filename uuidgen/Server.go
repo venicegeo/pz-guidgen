@@ -43,13 +43,13 @@ func (server *Server) Init(service *Service) {
 
 func (server *Server) handleGetRoot(c *gin.Context) {
 	message := "Hi. I'm pz-uuidgen."
-	resp := piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
-	c.IndentedJSON(resp.StatusCode, resp)
+	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: message}
+	piazza.GinReturnJson(c, resp)
 }
 
 func (server *Server) handleGetStats(c *gin.Context) {
 	resp := server.service.GetStats()
-	c.IndentedJSON(resp.StatusCode, resp)
+	piazza.GinReturnJson(c, resp)
 }
 
 // request body is ignored
@@ -57,5 +57,5 @@ func (server *Server) handleGetStats(c *gin.Context) {
 func (server *Server) handlePostUuids(c *gin.Context) {
 	params := piazza.NewQueryParams(c.Request)
 	resp := server.service.PostUuids(params)
-	c.IndentedJSON(resp.StatusCode, resp)
+	piazza.GinReturnJson(c, resp)
 }
