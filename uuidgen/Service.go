@@ -16,7 +16,6 @@ package uuidgen
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -116,12 +115,9 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 	service.stats.NumRequests++
 	service.stats.Unlock()
 
-	//log.Printf("INFO: uuidgen created %d", count)
-
 	resp := &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
 	err = resp.SetType()
 	if err != nil {
-		log.Printf("UuidService.PostUuids: returning %#v", nil)
 		return &piazza.JsonResponse{
 			StatusCode: http.StatusInternalServerError,
 			Message:    err.Error(),
@@ -129,6 +125,5 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		}
 	}
 
-	log.Printf("UuidService.PostUuids: returning %#v", resp)
 	return resp
 }

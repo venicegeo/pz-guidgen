@@ -17,13 +17,13 @@ package uuidgen
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type Client struct {
-	url string
+	url    string
+	apiKey string
 }
 
 //---------------------------------------------------------------------
@@ -47,6 +47,14 @@ func NewClient(sys *piazza.SystemConfig) (*Client, error) {
 	return service, nil
 }
 
+func NewClient2(url string, apiKey string) (*Client, error) {
+	service := &Client{
+		url:    url,
+		apiKey: apiKey,
+	}
+	return service, nil
+}
+
 //---------------------------------------------------------------------
 
 func (c *Client) PostUuids(count int) (*[]string, error) {
@@ -67,7 +75,6 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	out := make([]string, count)
 	err := resp.ExtractData(&out)
-	log.Printf("PostUuid returning %#v / %#v", err, out)
 	return &out, err
 }
 
@@ -89,6 +96,5 @@ func (c *Client) GetUuid() (string, error) {
 		return "", err
 	}
 
-	log.Printf("GetUuid returning %s / %#v", (*data)[0], data)
 	return (*data)[0], nil
 }
