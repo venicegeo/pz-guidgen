@@ -1,5 +1,7 @@
 #!/bin/bash
 
+DOMAIN=int.geointservices.io
+
 url="https://pz-uuidgen.$PZDOMAIN/admin/stats"
 echo
 echo GET $url
