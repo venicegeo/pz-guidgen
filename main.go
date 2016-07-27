@@ -33,35 +33,28 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("AAA")
 
 	logger, err := pzlogger.NewClient(sys)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("BBB")
 
 	service := &pzuuidgen.Service{}
 	err = service.Init(sys, logger)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("CCC")
 
 	server := &pzuuidgen.Server{}
 	server.Init(service)
 
 	genericServer := &piazza.GenericServer{Sys: sys}
 	err = genericServer.Configure(server.Routes)
-	log.Printf("DDD")
 	if err != nil {
-		log.Printf("EEE")
 		log.Fatal(err)
 	}
 	done, err := genericServer.Start()
-	log.Printf("FFF")
 	if err != nil {
-		log.Printf("GGG")
 		log.Fatal(err)
 	}
 
