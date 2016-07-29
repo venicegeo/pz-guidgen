@@ -19,8 +19,8 @@ export GO15VENDOREXPERIMENT="1"
 curl https://glide.sh/get | sh
 
 # get ourself, and go there
-go get github.com/venicegeo/pz-gocommon/gocommon
-cd $GOPATH/src/github.com/venicegeo/pz-gocommon
+go get github.com/venicegeo/pz-uuidgen
+cd $GOPATH/src/github.com/venicegeo/pz-uuidgen
 
 glide install
 
