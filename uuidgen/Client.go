@@ -15,7 +15,6 @@
 package uuidgen
 
 import (
-	"errors"
 	"fmt"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -69,7 +68,7 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	// the only thing we return from a POST is a string-list
 	if resp.Type != "string-list" {
-		err := errors.New(fmt.Sprintf("Unsupported response data type: %s", resp.Type))
+		err := fmt.Errorf("Unsupported response data type: %s", resp.Type)
 		return nil, err
 	}
 
