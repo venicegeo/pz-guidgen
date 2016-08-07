@@ -19,14 +19,13 @@ import (
 	"time"
 
 	"github.com/pborman/uuid"
-	"github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type MockClient struct {
 	stats UuidGenAdminStats
 }
 
-func NewMockClient(sys *piazza.SystemConfig) (*MockClient, error) {
+func NewMockClient() (*MockClient, error) {
 	var _ IClient = new(MockClient)
 
 	client := &MockClient{}

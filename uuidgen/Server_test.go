@@ -26,8 +26,6 @@ import (
 	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
-const MOCKING = true
-
 type UuidgenTester struct {
 	suite.Suite
 	sys           *piazza.SystemConfig
@@ -43,38 +41,20 @@ func (suite *UuidgenTester) SetupSuite() {
 	var err error
 
 	var required []piazza.ServiceName
-	if MOCKING {
-		required = []piazza.ServiceName{}
-	} else {
-		required = []piazza.ServiceName{
-			piazza.PzElasticSearch,
-			piazza.PzLogger,
-		}
-	}
+	required = []piazza.ServiceName{}
 
 	suite.sys, err = piazza.NewSystemConfig(piazza.PzUuidgen, required)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if MOCKING {
-		suite.logger, err = pzlogger.NewMockClient(suite.sys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		suite.client, err = NewMockClient(suite.sys)
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		suite.logger, err = pzlogger.NewClient(suite.sys)
-		if err != nil {
-			log.Fatal(err)
-		}
-		suite.client, err = NewClient(suite.sys)
-		if err != nil {
-			log.Fatal(err)
-		}
+	suite.logger, err = pzlogger.NewMockClient()
+	if err != nil {
+		log.Fatal(err)
+	}
+	suite.client, err = NewMockClient()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	suite.total = 0
