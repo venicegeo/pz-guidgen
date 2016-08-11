@@ -23,6 +23,7 @@ go get github.com/venicegeo/pz-uuidgen
 cd $GOPATH/src/github.com/venicegeo/pz-uuidgen
 
 glide install
+glide update
 
 #----------------------------------------------------------------------
 
