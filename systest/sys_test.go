@@ -79,7 +79,7 @@ func (suite *UuidgenTester) Test00Version() {
 	assert.EqualValues("1.0.0", version.Version)
 }
 
-func (suite *UuidgenTester) TestGet() {
+func (suite *UuidgenTester) Test01Get() {
 	t := suite.T()
 	assert := assert.New(t)
 
@@ -94,7 +94,7 @@ func (suite *UuidgenTester) TestGet() {
 	assert.True(isValid(uuid))
 }
 
-func (suite *UuidgenTester) TestPost() {
+func (suite *UuidgenTester) Test02Post() {
 	t := suite.T()
 	assert := assert.New(t)
 
@@ -117,7 +117,7 @@ func (suite *UuidgenTester) TestPost() {
 	}
 }
 
-func (suite *UuidgenTester) TestAdmin() {
+func (suite *UuidgenTester) Test03Admin() {
 	t := suite.T()
 	assert := assert.New(t)
 
