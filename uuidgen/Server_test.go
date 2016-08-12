@@ -108,6 +108,17 @@ func (suite *UuidgenTester) checkValidResponse(t *testing.T, data *[]string, cou
 	return values
 }
 
+func (suite *UuidgenTester) Test00Version() {
+	t := suite.T()
+	assert := assert.New(t)
+
+	client := suite.client
+
+	version, err := client.GetVersion()
+	assert.NoError(err)
+	assert.EqualValues("1.0.0", version.Version)
+}
+
 func (suite *UuidgenTester) Test01Okay() {
 	t := suite.T()
 	assert := assert.New(t)

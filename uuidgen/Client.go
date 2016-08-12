@@ -56,6 +56,24 @@ func NewClient2(url string, apiKey string) (*Client, error) {
 
 //---------------------------------------------------------------------
 
+func (c *Client) GetVersion() (*piazza.Version, error) {
+	h := piazza.Http{BaseUrl: c.url}
+	resp := h.PzGet("/version")
+	if resp.IsError() {
+		return nil, resp.ToError()
+	}
+
+	var version piazza.Version
+	err := resp.ExtractData(&version)
+	if err != nil {
+		return nil, err
+	}
+
+	return &version, nil
+}
+
+//---------------------------------------------------------------------
+
 func (c *Client) PostUuids(count int) (*[]string, error) {
 
 	endpoint := fmt.Sprintf("/uuids?count=%d", count)

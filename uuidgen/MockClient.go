@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/pborman/uuid"
+	"github.com/venicegeo/pz-gocommon/gocommon"
 )
 
 type MockClient struct {
@@ -33,6 +34,11 @@ func NewMockClient() (*MockClient, error) {
 	client.stats.CreatedOn = time.Now()
 
 	return client, nil
+}
+
+func (c *MockClient) GetVersion() (*piazza.Version, error) {
+	version := piazza.Version{Version: Version}
+	return &version, nil
 }
 
 func (client *MockClient) PostUuids(count int) (*[]string, error) {

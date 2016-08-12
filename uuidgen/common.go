@@ -27,6 +27,7 @@ type IClient interface {
 	// low-level interfaces
 	PostUuids(count int) (*[]string, error)
 	GetStats() (*UuidGenAdminStats, error)
+	GetVersion() (*piazza.Version, error)
 }
 
 type UuidGenAdminStats struct {

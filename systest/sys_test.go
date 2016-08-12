@@ -65,6 +65,20 @@ func isValid(uuid string) bool {
 	return uuidpkg.Parse(uuid) != nil
 }
 
+func (suite *UuidgenTester) Test00Version() {
+	t := suite.T()
+	assert := assert.New(t)
+
+	suite.setupFixture()
+	defer suite.teardownFixture()
+
+	client := suite.client
+
+	version, err := client.GetVersion()
+	assert.NoError(err)
+	assert.EqualValues("1.0.0", version.Version)
+}
+
 func (suite *UuidgenTester) TestGet() {
 	t := suite.T()
 	assert := assert.New(t)
