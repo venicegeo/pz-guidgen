@@ -28,6 +28,6 @@ go get github.com/stretchr/testify/assert
 
 #----------------------------------------------------------------------
 
-go test -v -coverprofile=uuidgen.cov github.com/venicegeo/pz-uuidgen
+go test -v -coverprofile=uuidgen.cov github.com/venicegeo/pz-uuidgen/uuidgen
 
 ###
