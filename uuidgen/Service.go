@@ -74,12 +74,11 @@ func (service *Service) GetStats() *piazza.JsonResponse {
 // request body is ignored
 // we allow a count of zero, for testing
 func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
-	var count *int
+	var count int
 	var err error
 
 	// ?count=INT
-	defalt := 1
-	count, err = params.GetCount(&defalt)
+	count, err = params.GetCount(1)
 	if err != nil {
 		return &piazza.JsonResponse{
 			StatusCode: http.StatusInternalServerError,
@@ -88,15 +87,7 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		}
 	}
 
-	if count == nil {
-		return &piazza.JsonResponse{
-			StatusCode: http.StatusBadRequest,
-			Message:    "query argument invalid: 'count'",
-			Origin:     service.origin,
-		}
-	}
-
-	if *count < 0 || *count > 255 {
+	if count < 0 || count > 255 {
 		s := fmt.Sprintf("query argument out of range: %d", count)
 		return &piazza.JsonResponse{
 			StatusCode: http.StatusBadRequest,
@@ -105,13 +96,13 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		}
 	}
 
-	uuids := make([]string, *count)
-	for i := 0; i < *count; i++ {
+	uuids := make([]string, count)
+	for i := 0; i < count; i++ {
 		uuids[i] = uuid.New()
 	}
 
 	service.stats.Lock()
-	service.stats.NumUUIDs += *count
+	service.stats.NumUUIDs += count
 	service.stats.NumRequests++
 	service.stats.Unlock()
 
