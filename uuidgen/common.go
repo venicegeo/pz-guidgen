@@ -40,4 +40,5 @@ type Stats struct {
 
 func init() {
 	piazza.JsonResponseDataTypes["*uuidgen.Stats"] = "uuidstats"
+	piazza.JsonResponseDataTypes["uuidgen.Stats"] = "uuidstats"
 }
