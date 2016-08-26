@@ -88,7 +88,7 @@ func (suite *UuidgenTester) Test01Get() {
 
 	client := suite.client
 
-	uuid, err := client.GetUuid()
+	uuid, err := client.GetUUID()
 	assert.NoError(err)
 
 	assert.True(isValid(uuid))

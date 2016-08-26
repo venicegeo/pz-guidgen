@@ -22,15 +22,15 @@ import (
 
 type IClient interface {
 	// high-level interfaces
-	GetUuid() (string, error)
+	GetUUID() (string, error)
 
 	// low-level interfaces
 	PostUuids(count int) (*[]string, error)
-	GetStats() (*UuidGenAdminStats, error)
+	GetStats() (*Stats, error)
 	GetVersion() (*piazza.Version, error)
 }
 
-type UuidGenAdminStats struct {
+type Stats struct {
 	NumUUIDs    int       `json:"numUuids"`
 	NumRequests int       `json:"numRequests"`
 	CreatedOn   time.Time `json:"createdOn"`
@@ -39,5 +39,5 @@ type UuidGenAdminStats struct {
 //---------------------------------------------------------------------------
 
 func init() {
-	piazza.JsonResponseDataTypes["uuidgen.UuidGenAdminStats"] = "uuidstats"
+	piazza.JsonResponseDataTypes["*uuidgen.Stats"] = "uuidstats"
 }

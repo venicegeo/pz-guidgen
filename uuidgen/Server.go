@@ -19,13 +19,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
-	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
 //--------------------------------------------------
 
 type Server struct {
-	logger  pzlogger.IClient
+	//logger  pzlogger.IClient
 	Routes  []piazza.RouteData
 	service *Service
 }
@@ -36,10 +35,10 @@ const Version = "1.0.0"
 
 func (server *Server) Init(service *Service) {
 	server.Routes = []piazza.RouteData{
-		{"GET", "/", server.handleGetRoot},
-		{"GET", "/version", server.handleGetVersion},
-		{"GET", "/admin/stats", server.handleGetStats},
-		{"POST", "/uuids", server.handlePostUuids},
+		{Verb: "GET", Path: "/", Handler: server.handleGetRoot},
+		{Verb: "GET", Path: "/version", Handler: server.handleGetVersion},
+		{Verb: "GET", Path: "/admin/stats", Handler: server.handleGetStats},
+		{Verb: "POST", Path: "/uuids", Handler: server.handlePostUuids},
 	}
 	server.service = service
 }

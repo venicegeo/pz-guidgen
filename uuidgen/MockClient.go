@@ -23,7 +23,7 @@ import (
 )
 
 type MockClient struct {
-	stats UuidGenAdminStats
+	stats Stats
 }
 
 func NewMockClient() (*MockClient, error) {
@@ -41,7 +41,7 @@ func (c *MockClient) GetVersion() (*piazza.Version, error) {
 	return &version, nil
 }
 
-func (client *MockClient) PostUuids(count int) (*[]string, error) {
+func (c *MockClient) PostUuids(count int) (*[]string, error) {
 
 	if count < 0 || count > 255 {
 		return nil, errors.New("invalid count value")
@@ -52,18 +52,18 @@ func (client *MockClient) PostUuids(count int) (*[]string, error) {
 		data[i] = uuid.New()
 	}
 
-	client.stats.NumUUIDs += count
-	client.stats.NumRequests++
+	c.stats.NumUUIDs += count
+	c.stats.NumRequests++
 
 	return &data, nil
 }
 
-func (client *MockClient) GetStats() (*UuidGenAdminStats, error) {
-	return &client.stats, nil
+func (c *MockClient) GetStats() (*Stats, error) {
+	return &c.stats, nil
 }
 
-func (client *MockClient) GetUuid() (string, error) {
-	data, err := client.PostUuids(1)
+func (c *MockClient) GetUUID() (string, error) {
+	data, err := c.PostUuids(1)
 	if err != nil {
 		return "", err
 	}

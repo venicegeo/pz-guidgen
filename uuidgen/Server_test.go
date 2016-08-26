@@ -28,13 +28,14 @@ import (
 
 type UuidgenTester struct {
 	suite.Suite
-	sys           *piazza.SystemConfig
-	total         int
-	logger        pzlogger.IClient
-	client        IClient
-	genericServer *piazza.GenericServer
-	server        *Server
-	service       *Service
+	sys            *piazza.SystemConfig
+	totalRequested int
+	totalGenerated int
+	logger         pzlogger.IClient
+	client         IClient
+	genericServer  *piazza.GenericServer
+	server         *Server
+	service        *Service
 }
 
 func (suite *UuidgenTester) SetupSuite() {
@@ -57,7 +58,8 @@ func (suite *UuidgenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.total = 0
+	suite.totalRequested = 0
+	suite.totalGenerated = 0
 
 	suite.service = &Service{}
 	err = suite.service.Init(suite.sys, suite.logger)
@@ -80,7 +82,10 @@ func (suite *UuidgenTester) SetupSuite() {
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
-	suite.genericServer.Stop()
+	err := suite.genericServer.Stop()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func TestRunSuite(t *testing.T) {
@@ -88,10 +93,11 @@ func TestRunSuite(t *testing.T) {
 	suite.Run(t, s)
 }
 
-func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *UuidGenAdminStats) {
+func (suite *UuidgenTester) checkValidStatsResponse(t *testing.T, stats *Stats) {
 	assert.WithinDuration(t, time.Now(), stats.CreatedOn, 5*time.Second)
 
-	assert.Equal(t, suite.total, stats.NumUUIDs)
+	assert.Equal(t, suite.totalGenerated, stats.NumUUIDs)
+	assert.Equal(t, suite.totalRequested, stats.NumRequests)
 }
 
 func (suite *UuidgenTester) checkValidResponse(t *testing.T, data *[]string, count int) []uuid.UUID {
@@ -134,31 +140,36 @@ func (suite *UuidgenTester) Test01Okay() {
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
-	suite.total += 1
+	suite.totalRequested++
+	suite.totalGenerated++
 
 	data, err = client.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
-	suite.total += 1
+	suite.totalRequested++
+	suite.totalGenerated++
 
 	data, err = client.PostUuids(1)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 1)
 	values = append(values, tmp...)
-	suite.total += 1
+	suite.totalRequested++
+	suite.totalGenerated++
 
 	data, err = client.PostUuids(10)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 10)
 	values = append(values, tmp...)
-	suite.total += 10
+	suite.totalRequested++
+	suite.totalGenerated += 10
 
 	data, err = client.PostUuids(255)
 	assert.NoError(err, "PostToUuids")
 	tmp = suite.checkValidResponse(t, data, 255)
 	values = append(values, tmp...)
-	suite.total += 255
+	suite.totalRequested++
+	suite.totalGenerated += 255
 
 	// uuids should be, umm, unique
 	for i := 0; i < len(values); i++ {
@@ -173,10 +184,11 @@ func (suite *UuidgenTester) Test01Okay() {
 	assert.NoError(err, "GetStats")
 	suite.checkValidStatsResponse(t, stats)
 
-	s, err := client.GetUuid()
+	s, err := client.GetUUID()
 	assert.NoError(err, "pzService.GetUuid")
 	assert.NotEmpty(s, "GetUuid failed - returned empty string")
-	suite.total += 1
+	suite.totalRequested++
+	suite.totalGenerated++
 }
 
 func (suite *UuidgenTester) Test02Bad() {

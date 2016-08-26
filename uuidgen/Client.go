@@ -95,18 +95,18 @@ func (c *Client) PostUuids(count int) (*[]string, error) {
 	return &out, err
 }
 
-func (c *Client) GetStats() (*UuidGenAdminStats, error) {
+func (c *Client) GetStats() (*Stats, error) {
 	h := piazza.Http{BaseUrl: c.url}
 	resp := h.PzGet("/admin/stats")
 	if resp.IsError() {
 		return nil, resp.ToError()
 	}
-	out := &UuidGenAdminStats{}
+	out := &Stats{}
 	err := resp.ExtractData(out)
 	return out, err
 }
 
-func (c *Client) GetUuid() (string, error) {
+func (c *Client) GetUUID() (string, error) {
 
 	data, err := c.PostUuids(1)
 	if err != nil {

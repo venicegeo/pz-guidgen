@@ -27,14 +27,10 @@ import (
 
 //---------------------------------------------------------------------
 
-type Stats struct {
-	sync.Mutex
-	UuidGenAdminStats
-}
-
 type Service struct {
-	logger pzlogger.IClient
+	sync.Mutex
 	stats  Stats
+	logger pzlogger.IClient
 	origin string
 }
 
@@ -44,10 +40,7 @@ func (service *Service) Init(sys *piazza.SystemConfig, logger pzlogger.IClient) 
 	service.logger = logger
 	service.stats.CreatedOn = time.Now()
 
-	err := service.logger.Info("uuidgen started")
-	if err != nil {
-		return err
-	}
+	service.logger.Info("uuidgen started")
 
 	service.origin = string(sys.Name)
 
@@ -55,9 +48,9 @@ func (service *Service) Init(sys *piazza.SystemConfig, logger pzlogger.IClient) 
 }
 
 func (service *Service) GetStats() *piazza.JsonResponse {
-	service.stats.Lock()
-	data := service.stats.UuidGenAdminStats
-	service.stats.Unlock()
+	service.Lock()
+	data := service.stats
+	service.Unlock()
 
 	resp := &piazza.JsonResponse{StatusCode: http.StatusOK, Data: data}
 	err := resp.SetType()
@@ -71,8 +64,9 @@ func (service *Service) GetStats() *piazza.JsonResponse {
 	return resp
 }
 
-// request body is ignored
-// we allow a count of zero, for testing
+// PostUuids generates one or more UUIDs.
+//
+// The request body is ignored. We allow a count of zero, for testing.
 func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonResponse {
 	var count int
 	var err error
@@ -101,10 +95,10 @@ func (service *Service) PostUuids(params *piazza.HttpQueryParams) *piazza.JsonRe
 		uuids[i] = uuid.New()
 	}
 
-	service.stats.Lock()
+	service.Lock()
 	service.stats.NumUUIDs += count
 	service.stats.NumRequests++
-	service.stats.Unlock()
+	service.Unlock()
 
 	resp := &piazza.JsonResponse{StatusCode: http.StatusCreated, Data: uuids}
 	err = resp.SetType()
