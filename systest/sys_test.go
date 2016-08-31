@@ -15,6 +15,7 @@
 package uuidgen_systest
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -32,9 +33,10 @@ func sleep() {
 
 type UuidgenTester struct {
 	suite.Suite
-	client *uuidgen.Client
-	url    string
-	apiKey string
+	client    *uuidgen.Client
+	url       string
+	apiKey    string
+	apiServer string
 }
 
 func (suite *UuidgenTester) setupFixture() {
@@ -43,9 +45,15 @@ func (suite *UuidgenTester) setupFixture() {
 
 	var err error
 
-	suite.url = "https://pz-uuidgen.int.geointservices.io"
+	suite.apiServer, err = piazza.GetApiServer()
+	assert.NoError(err)
 
-	suite.apiKey, err = piazza.GetApiKey("int")
+	i := strings.Index(suite.apiServer, ".")
+	assert.NotEqual(1, i)
+	host := "pz-uuidgen" + suite.apiServer[i:]
+	suite.url = "https://" + host
+
+	suite.apiKey, err = piazza.GetApiKey(suite.apiServer)
 	assert.NoError(err)
 
 	client, err := uuidgen.NewClient2(suite.url, suite.apiKey)
