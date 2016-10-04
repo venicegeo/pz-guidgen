@@ -15,6 +15,7 @@
 package uuidgen
 
 import (
+	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -79,6 +80,9 @@ func (suite *UuidgenTester) SetupSuite() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	piazza.HTTP(piazza.GET, fmt.Sprintf("127.0.0.1:%s/version", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
+	piazza.HTTP(piazza.GET, fmt.Sprintf("127.0.0.1:%s/admin/stats", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
+	piazza.HTTP(piazza.POST, fmt.Sprintf("127.0.0.1:%s/uuids?count=5", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
 }
 
 func (suite *UuidgenTester) TearDownSuite() {
