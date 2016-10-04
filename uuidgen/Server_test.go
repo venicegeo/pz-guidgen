@@ -15,6 +15,7 @@
 package uuidgen
 
 import (
+	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -123,6 +124,8 @@ func (suite *UuidgenTester) Test00Version() {
 	version, err := client.GetVersion()
 	assert.NoError(err)
 	assert.EqualValues("1.0.0", version.Version)
+	_, _, _, err = piazza.HTTP(piazza.GET, fmt.Sprintf("127.0.0.1:%s/version", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
+	assert.NoError(err)
 }
 
 func (suite *UuidgenTester) Test01Okay() {
@@ -180,9 +183,14 @@ func (suite *UuidgenTester) Test01Okay() {
 		}
 	}
 
+	_, _, _, err = piazza.HTTP(piazza.POST, fmt.Sprintf("127.0.0.1:%s/uuids?count=0", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
+	assert.NoError(err)
+
 	stats, err := client.GetStats()
 	assert.NoError(err, "GetStats")
 	suite.checkValidStatsResponse(t, stats)
+	_, _, _, err = piazza.HTTP(piazza.GET, fmt.Sprintf("127.0.0.1:%s/admin/stats", piazza.LocalPortNumbers[piazza.PzUuidgen]), piazza.NewHeaderBuilder().AddJsonContentType().GetHeader(), nil)
+	assert.NoError(err)
 
 	s, err := client.GetUUID()
 	assert.NoError(err, "pzService.GetUuid")
