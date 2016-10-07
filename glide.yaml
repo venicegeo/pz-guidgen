@@ -8,6 +8,7 @@ import:
 - package: github.com/venicegeo/pz-logger
   subpackages:
   - logger
+testImport:
 - package: github.com/stretchr/testify
   subpackages:
   - assert
