@@ -14,14 +14,19 @@ mkdir "$GOPATH"/bin "$GOPATH"/src "$GOPATH"/pkg
 
 PATH=$PATH:"$GOPATH"/bin
 
-curl https://glide.sh/get | sh
+# install metalinter
+go get -u github.com/alecthomas/gometalinter
+gometalinter --install
 
-# get ourself, and go there
+# build ourself, and go there
 go get github.com/venicegeo/pz-uuidgen
 cd $GOPATH/src/github.com/venicegeo/pz-uuidgen
 
 #----------------------------------------------------------------------
 
 go test -v -coverprofile=uuidgen.cov github.com/venicegeo/pz-uuidgen/uuidgen
+
+sh ci/metalinter.sh | tee lint.txt
+wc -l lint.txt
 
 ###
