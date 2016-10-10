@@ -11,7 +11,7 @@ sh $root/ci/do_build.sh
 
 #----------------------------------------------------------------------
 
-app=$GOPATH/bin/pz-logger
+app=$GOPATH/bin/pz-uuidgen
 
 # gather some data about the repo
 source $root/ci/vars.sh
