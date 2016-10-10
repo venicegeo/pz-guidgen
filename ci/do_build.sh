@@ -22,8 +22,8 @@ go get github.com/venicegeo/pz-uuidgen
 cd $GOPATH/src/github.com/venicegeo/pz-uuidgen
 
 # run unit tests w/ coverage collection
-go test -v -coverprofile=uuidgen.cov github.com/venicegeo/pz-uuidgen/uuidgen
+go test -v -coverprofile=$root/uuidgen.cov github.com/venicegeo/pz-uuidgen/uuidgen
 
 # run lint
-sh ci/metalinter.sh | tee lint.txt
-wc -l lint.txt
+sh ci/metalinter.sh | tee $root/lint.txt
+wc -l $root/lint.txt
