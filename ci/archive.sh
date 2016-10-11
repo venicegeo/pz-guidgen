@@ -11,14 +11,12 @@ sh $root/ci/do_build.sh
 
 #----------------------------------------------------------------------
 
-app=$GOPATH/bin/pz-uuidgen
-
 # gather some data about the repo
 source $root/ci/vars.sh
 
 cd $root
-tar cvzf $APP.tgz \
-    $APP.$EXT \
+tar cvzf $APP.$EXT \
+    $GOPATH/bin/pz-uuidgen \
     uuidgen.cov \
     lint.txt \
     glide.lock \
