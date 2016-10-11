@@ -15,8 +15,9 @@ sh $root/ci/do_build.sh
 source $root/ci/vars.sh
 
 cd $root
+cp $GOPATH/bin/$APP .
 tar cvzf $APP.$EXT \
-    $GOPATH/bin/pz-uuidgen \
+    $APP \
     uuidgen.cov \
     lint.txt \
     glide.lock \
