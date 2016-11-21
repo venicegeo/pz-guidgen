@@ -1,10 +1,10 @@
 hash: 1269c0b0a9f5ef8921474bff3d924875ce6437a77cc64e96998a2926a323cd2b
-updated: 2016-10-11T12:18:51.956261909-04:00
+updated: 2016-11-21T16:11:59.482066707-05:00
 imports:
 - name: github.com/fvbock/endless
   version: 67d0a784ad8ab10a69d12107f6de220db0c18002
 - name: github.com/gin-gonic/gin
-  version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
+  version: 9177f01c2843b91820780197f521ba48554b9df3
   subpackages:
   - binding
   - render
@@ -17,12 +17,12 @@ imports:
 - name: github.com/pborman/uuid
   version: 3d4f2ba23642d3cfd06bd4b54cf03d99d95c0f1b
 - name: github.com/venicegeo/pz-gocommon
-  version: 960518f95e43596aca08149feb2b178509f9d725
+  version: 9ff55d3982048040d71544ba84cf870bf2a48347
   subpackages:
   - elasticsearch
   - gocommon
 - name: github.com/venicegeo/pz-logger
-  version: 4edb0aa89c0311c83dcad98e0474b97f0475577c
+  version: 8a1a0bb2ebd890a76c6ee49fcaac0de9104bb499
   subpackages:
   - logger
 - name: golang.org/x/net
