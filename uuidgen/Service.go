@@ -22,6 +22,7 @@ import (
 
 	"github.com/pborman/uuid"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	syslogger "github.com/venicegeo/pz-gocommon/syslog"
 	pzlogger "github.com/venicegeo/pz-logger/logger"
 )
 
@@ -29,20 +30,27 @@ import (
 
 type Service struct {
 	sync.Mutex
-	stats  Stats
-	logger pzlogger.IClient
-	origin string
+	stats Stats
+	//logger    pzlogger.IClient
+	syslogger *syslogger.Syslogger
+	origin    string
 }
 
 //---------------------------------------------------------------------
 
-func (service *Service) Init(sys *piazza.SystemConfig, logger pzlogger.IClient) error {
-	service.logger = logger
+func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.IClient) error {
+	//service.logger = loggerClient
 	service.stats.CreatedOn = time.Now()
 
-	service.logger.Info("uuidgen started")
-
 	service.origin = string(sys.Name)
+
+	service.syslogger = &syslogger.Syslogger{
+		Writer: &pzlogger.SyslogElkWriter{
+			Client: loggerClient,
+		},
+	}
+
+	service.syslogger.Info("uuidgen started")
 
 	return nil
 }
