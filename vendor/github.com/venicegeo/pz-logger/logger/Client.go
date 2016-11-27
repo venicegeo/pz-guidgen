@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/venicegeo/pz-gocommon/gocommon"
+	syslog "github.com/venicegeo/pz-gocommon/syslog"
 )
 
 //---------------------------------------------------------------------
@@ -234,4 +235,44 @@ func (c *Client) Fatal(message string, v ...interface{}) {
 	if err != nil {
 		log.Printf("Error sending to logger: %s", err.Error())
 	}
+}
+
+type SyslogElkWriter struct {
+	Client IClient
+}
+
+func (w *SyslogElkWriter) Write(mNew *syslog.SyslogMessage) error {
+	if w.Client == nil {
+		return fmt.Errorf("Log writer client not set")
+	}
+
+	severity := SeverityInfo
+	switch mNew.Severity {
+	case syslog.Debug:
+		severity = SeverityDebug
+	case syslog.Informational:
+		severity = SeverityInfo
+	case syslog.Warning:
+		severity = SeverityWarning
+	case syslog.Error:
+		severity = SeverityError
+	case syslog.Fatal:
+		severity = SeverityFatal
+	}
+
+	// translate syslog.Message to a logger.Message and the post it via the client
+	mOld := &Message{
+		Service:   piazza.ServiceName(mNew.Application),
+		Address:   mNew.HostName,
+		CreatedOn: mNew.TimeStamp,
+		Severity:  severity,
+		Message:   mNew.String(),
+	}
+
+	err := w.Client.PostMessage(mOld)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

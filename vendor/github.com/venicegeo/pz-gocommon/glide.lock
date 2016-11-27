@@ -1,5 +1,5 @@
 hash: b07f75134252be705194d5e0bd42011e14bc1f5975db99df16cdc1ecdde3738e
-updated: 2016-10-07T11:33:04.590616007-04:00
+updated: 2016-11-26T20:16:48.113719248-05:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
@@ -16,7 +16,7 @@ imports:
 - name: github.com/fvbock/endless
   version: 67d0a784ad8ab10a69d12107f6de220db0c18002
 - name: github.com/gin-gonic/gin
-  version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
+  version: 9177f01c2843b91820780197f521ba48554b9df3
   subpackages:
   - binding
   - render
@@ -26,6 +26,10 @@ imports:
   - proto
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+- name: github.com/jeromer/syslogparser
+  version: 0e4ae46ea3f08de351074b643d649d5d00661a3c
+  subpackages:
+  - rfc5424
 - name: github.com/klauspost/crc32
   version: 19b0b332c9e4516a6370a0456e6182c3b5036720
 - name: github.com/manucorporat/sse

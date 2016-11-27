@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/venicegeo/pz-gocommon/elasticsearch"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	"github.com/venicegeo/pz-gocommon/syslog"
 )
 
 func sleep() {
@@ -482,4 +483,46 @@ func (suite *LoggerTester) Test09GerMessagesErrors() {
 	assert.NoError(err)
 	assert.Equal(0, count)
 	assert.EqualValues([]Message{}, mssgs)
+}
+
+func (suite *LoggerTester) Test10Syslog() {
+	t := suite.T()
+	assert := assert.New(t)
+
+	suite.setupFixture()
+	defer suite.teardownFixture()
+
+	syslogger := &syslog.Syslogger{
+		Writer: &SyslogElkWriter{
+			Client: suite.client,
+		},
+	}
+
+	{
+		s := "The quick brown fox"
+		syslogger.Warning(s)
+		sleep()
+		actual := suite.getLastMessage()
+		assert.Contains(actual, s)
+		pri := fmt.Sprintf("<%d>%d",
+			8*syslog.DefaultFacility+syslog.Warning.Value(), syslog.DefaultVersion)
+		assert.Contains(actual, pri)
+	}
+
+	{
+		s := "The lazy dog"
+		syslogger.Error(s)
+		sleep()
+		actual := suite.getLastMessage()
+		assert.Contains(actual, s)
+		pri := fmt.Sprintf("<%d>%d",
+			8*syslog.DefaultFacility+syslog.Error.Value(), syslog.DefaultVersion)
+		assert.Contains(actual, pri)
+	}
+
+	{
+		stats, err := suite.client.GetStats()
+		assert.NoError(err)
+		assert.EqualValues(2, stats.NumMessages)
+	}
 }
