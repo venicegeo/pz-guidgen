@@ -246,6 +246,8 @@ func (w *SyslogElkWriter) Write(mNew *syslog.Message) error {
 		return fmt.Errorf("Log writer client not set")
 	}
 
+	log.Printf("SyslogElkWriter.Write: started for %s", mNew.String())
+
 	severity := SeverityInfo
 	switch mNew.Severity {
 	case syslog.Debug:
@@ -269,10 +271,15 @@ func (w *SyslogElkWriter) Write(mNew *syslog.Message) error {
 		Message:   mNew.String(),
 	}
 
+	log.Printf("SyslogElkWriter.Write: created %s", mOld.String())
+
 	err := w.Client.PostMessage(mOld)
 	if err != nil {
+		log.Printf("SyslogElkWriter.Write: failed %s", err.Error())
 		return err
 	}
+
+	log.Printf("SyslogElkWriter.Write: passed")
 
 	return nil
 }
