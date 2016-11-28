@@ -193,7 +193,7 @@ func Test05Logger(t *testing.T) {
 		writer := &Writer{
 			Writer: &buf,
 		}
-		logger := NewLogger(writer)
+		logger := NewLogger(writer, "testapp")
 		logger.Warning("bonk")
 		logger.Error("Bonk")
 		logger.Fatal("BONK")
@@ -224,7 +224,7 @@ func Test06LogLevel(t *testing.T) {
 		writer := &Writer{
 			Writer: &buf,
 		}
-		logger := NewLogger(writer)
+		logger := NewLogger(writer, "testapp")
 		logger.MinimumSeverity = Error
 		logger.Warning("bonk")
 		logger.Error("Bonk")
@@ -274,7 +274,7 @@ func Test08SourceElement(t *testing.T) {
 		writer := &Writer{
 			Writer: &buf,
 		}
-		logger := NewLogger(writer)
+		logger := NewLogger(writer, "testapp")
 		logger.UseSourceElement = true
 		logger.Fatal("BONK")
 	}

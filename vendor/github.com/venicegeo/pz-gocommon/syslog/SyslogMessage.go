@@ -16,13 +16,10 @@ package syslog
 
 import (
 	"fmt"
-	"os"
 	"path"
 	"runtime"
 	"strings"
 	"time"
-
-	"strconv"
 
 	"github.com/jeromer/syslogparser/rfc5424"
 )
@@ -67,22 +64,14 @@ type Message struct {
 
 // NewMessage returns a Message with the defaults filled in for you.
 func NewMessage() *Message {
-	var err error
-
-	host, err := os.Hostname()
-	if err != nil {
-		host = "-"
-	}
-	host += " "
-
 	m := &Message{
 		Facility:    DefaultFacility,
-		Severity:    Informational,
+		Severity:    -1,
 		Version:     DefaultVersion,
 		TimeStamp:   time.Now().Round(time.Millisecond),
-		HostName:    host,
+		HostName:    "",
 		Application: "",
-		Process:     strconv.Itoa(os.Getpid()),
+		Process:     "",
 		MessageID:   "",
 		AuditData:   nil,
 		MetricData:  nil,

@@ -495,7 +495,7 @@ func (suite *LoggerTester) Test10Syslog() {
 	writer := &SyslogElkWriter{
 		Client: suite.client,
 	}
-	syslogger := syslog.NewLogger(writer)
+	syslogger := syslog.NewLogger(writer, "loggertester")
 
 	{
 		s := "The quick brown fox"

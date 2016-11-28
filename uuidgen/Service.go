@@ -50,7 +50,7 @@ func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.ICl
 		Client: loggerClient,
 	}
 
-	service.syslogger = syslogger.NewLogger(writer)
+	service.syslogger = syslogger.NewLogger(writer, "pz-uuidgen")
 
 	service.syslogger.Info("uuidgen service started")
 
