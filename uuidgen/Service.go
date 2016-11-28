@@ -50,7 +50,7 @@ func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.ICl
 		},
 	}
 
-	service.syslogger.Info("uuidgen started")
+	service.syslogger.Info("uuidgen service started")
 
 	return nil
 }
@@ -69,6 +69,9 @@ func (service *Service) GetStats() *piazza.JsonResponse {
 			Origin:     service.origin,
 		}
 	}
+
+	service.syslogger.Info("uuidgen stats service called")
+
 	return resp
 }
 
