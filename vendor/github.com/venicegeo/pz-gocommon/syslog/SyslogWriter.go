@@ -17,6 +17,7 @@ package syslog
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 )
 
@@ -41,10 +42,12 @@ func (w *Writer) Write(mssg *Message) error {
 	}
 
 	s := mssg.String()
+	log.Printf("Writer.Write: %s", s)
 	_, err := io.WriteString(w.Writer, s)
 	if err != nil {
 		return err
 	}
+	log.Printf("written!")
 	return nil
 }
 

@@ -14,6 +14,8 @@
 
 package syslog
 
+import "log"
+
 //---------------------------------------------------------------------
 
 // Logger is the "helper" class that can (should) be used by services to send messages.
@@ -34,6 +36,7 @@ func NewLogger(writer WriterI) *Logger {
 }
 
 func (logger *Logger) severityAllowed(desiredSeverity Severity) bool {
+	log.Printf("Logger.severityAllowed: %d >= %d", logger.MinimumSeverity.Value(), desiredSeverity.Value())
 	return logger.MinimumSeverity.Value() >= desiredSeverity.Value()
 }
 
@@ -57,6 +60,7 @@ func (logger *Logger) postMessage(severity Severity, text string) {
 		mssg.SourceData = NewSourceElement(skip)
 	}
 
+	log.Printf("Writing: %s", mssg.String())
 	logger.writer.Write(mssg)
 }
 
