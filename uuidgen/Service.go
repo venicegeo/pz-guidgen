@@ -32,7 +32,6 @@ import (
 type Service struct {
 	sync.Mutex
 	stats     Stats
-	logger    pzlogger.IClient
 	syslogger *syslogger.Logger
 	origin    string
 }
@@ -44,7 +43,6 @@ func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.ICl
 	service.stats.CreatedOn = time.Now()
 
 	service.origin = string(sys.Name)
-	service.logger = loggerClient
 
 	writer := &pzlogger.SyslogElkWriter{
 		Client: loggerClient,
@@ -60,7 +58,6 @@ func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.ICl
 func (service *Service) GetStats() *piazza.JsonResponse {
 	log.Printf("uuidgen stats service called (1)")
 	service.syslogger.Info("uuidgen stats service called (2)")
-	service.logger.Info("uuidgen stats service called (3)")
 
 	service.Lock()
 	data := service.stats

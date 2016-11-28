@@ -194,9 +194,9 @@ func Test05Logger(t *testing.T) {
 			Writer: &buf,
 		}
 		logger := NewLogger(writer, "testapp")
-		logger.Warning("bonk")
-		logger.Error("Bonk")
-		logger.Fatal("BONK")
+		logger.Warning("bonk %d", 3)
+		logger.Error("Bonk %s", ".1")
+		logger.Fatal("BONK %f", 4.0)
 	}
 
 	mssg := buf.String()
@@ -211,9 +211,9 @@ func Test05Logger(t *testing.T) {
 		assert.Contains(mssg, str)
 	}
 
-	check(Warning, "bonk")
-	check(Error, "Bonk")
-	check(Fatal, "BONK")
+	check(Warning, "bonk 3")
+	check(Error, "Bonk .1")
+	check(Fatal, "BONK 4.0")
 }
 
 func Test06LogLevel(t *testing.T) {

@@ -17,8 +17,6 @@ package logger
 import (
 	"errors"
 	"fmt"
-	"log"
-	"time"
 
 	"github.com/venicegeo/pz-gocommon/gocommon"
 	syslog "github.com/venicegeo/pz-gocommon/syslog"
@@ -173,68 +171,9 @@ func (c *Client) PostMessage(mssg *Message) error {
 	return nil
 }
 
-// PostLog sends the components of a LogMessage to the logger.
-func (c *Client) PostLog(
-	service piazza.ServiceName,
-	address string,
-	severity Severity,
-	t time.Time,
-	message string, v ...interface{}) error {
-
-	str := fmt.Sprintf(message, v...)
-	mssg := Message{Service: service, Address: address, Severity: severity, CreatedOn: t, Message: str}
-
-	return c.PostMessage(&mssg)
-}
-
 func (c *Client) SetService(name piazza.ServiceName, address string) {
 	c.serviceName = name
 	c.serviceAddress = address
-}
-
-func (c *Client) post(severity Severity, message string, v ...interface{}) error {
-	str := fmt.Sprintf(message, v...)
-	return c.PostLog(c.serviceName, c.serviceAddress, severity, time.Now(), str)
-}
-
-// Debug sends a Debug-level message to the logger.
-func (c *Client) Debug(message string, v ...interface{}) {
-	err := c.post(SeverityDebug, message, v...)
-	if err != nil {
-		log.Printf("Error sending to logger: %s", err.Error())
-	}
-}
-
-// Info sends an Info-level message to the logger.
-func (c *Client) Info(message string, v ...interface{}) {
-	err := c.post(SeverityInfo, message, v...)
-	if err != nil {
-		log.Printf("Error sending to logger: %s", err.Error())
-	}
-}
-
-// Warn sends a Waring-level message to the logger.
-func (c *Client) Warn(message string, v ...interface{}) {
-	err := c.post(SeverityWarning, message, v...)
-	if err != nil {
-		log.Printf("Error sending to logger: %s", err.Error())
-	}
-}
-
-// Error sends a Error-level message to the logger.
-func (c *Client) Error(message string, v ...interface{}) {
-	err := c.post(SeverityError, message, v...)
-	if err != nil {
-		log.Printf("Error sending to logger: %s", err.Error())
-	}
-}
-
-// Fatal sends a Fatal-level message to the logger.
-func (c *Client) Fatal(message string, v ...interface{}) {
-	err := c.post(SeverityFatal, message, v...)
-	if err != nil {
-		log.Printf("Error sending to logger: %s", err.Error())
-	}
 }
 
 type SyslogElkWriter struct {
