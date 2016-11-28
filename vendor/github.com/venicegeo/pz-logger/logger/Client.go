@@ -241,7 +241,7 @@ type SyslogElkWriter struct {
 	Client IClient
 }
 
-func (w *SyslogElkWriter) Write(mNew *syslog.SyslogMessage) error {
+func (w *SyslogElkWriter) Write(mNew *syslog.Message) error {
 	if w.Client == nil {
 		return fmt.Errorf("Log writer client not set")
 	}

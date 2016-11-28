@@ -54,10 +54,10 @@ func safeRemove(s string) error {
 	return nil
 }
 
-func makeMessage(sde bool) (*SyslogMessage, string) {
-	m := NewSyslogMessage()
+func makeMessage(sde bool) (*Message, string) {
+	m := NewMessage()
 
-	// because ParseSyslogMessage isn't as accurate as we could be
+	// because ParseMessageString isn't as accurate as we could be
 	now := time.Now().Round(time.Second)
 
 	m.Facility = DefaultFacility
@@ -97,7 +97,7 @@ func makeMessage(sde bool) (*SyslogMessage, string) {
 
 //---------------------------------------------------------------------
 
-func Test01SyslogMessage(t *testing.T) {
+func Test01Message(t *testing.T) {
 	assert := assert.New(t)
 
 	m, expected := makeMessage(false)
@@ -105,13 +105,13 @@ func Test01SyslogMessage(t *testing.T) {
 	s := m.String()
 	assert.EqualValues(expected, s)
 
-	mm, err := ParseSyslogMessage(expected)
+	mm, err := ParseMessageString(expected)
 	assert.NoError(err)
 
 	assert.EqualValues(m, mm)
 }
 
-func Test02SyslogMessageSDE(t *testing.T) {
+func Test02MessageSDE(t *testing.T) {
 	assert := assert.New(t)
 
 	m, expected := makeMessage(true)
@@ -119,20 +119,20 @@ func Test02SyslogMessageSDE(t *testing.T) {
 	s := m.String()
 	assert.EqualValues(expected, s)
 
-	// TODO: this won't work under we make parser understand SDEs
-	//mm, err := ParseSyslogMessage(expected)
+	// TODO: this won't work until we make the parser understand SDEs
+	//mm, err := ParseMessageString(expected)
 	//assert.NoError(err)
 	//assert.EqualValues(m, mm)
 }
 
-func Test03SyslogWriter(t *testing.T) {
+func Test03Writer(t *testing.T) {
 	assert := assert.New(t)
 
 	m, expected := makeMessage(false)
 
 	{
 		// verify error if no io.Writer given
-		w := &SyslogWriter{Writer: nil}
+		w := &Writer{Writer: nil}
 		err := w.Write(m)
 		assert.Error(err)
 	}
@@ -140,7 +140,7 @@ func Test03SyslogWriter(t *testing.T) {
 	{
 		// a simple kind of writer
 		var buf bytes.Buffer
-		w := &SyslogWriter{Writer: &buf}
+		w := &Writer{Writer: &buf}
 		err := w.Write(m)
 		assert.NoError(err)
 
@@ -149,7 +149,7 @@ func Test03SyslogWriter(t *testing.T) {
 	}
 }
 
-func Test04SyslogFileWriter(t *testing.T) {
+func Test04FileWriter(t *testing.T) {
 	var err error
 
 	assert := assert.New(t)
@@ -162,7 +162,7 @@ func Test04SyslogFileWriter(t *testing.T) {
 	m1, expected1 := makeMessage(false)
 	m2, expected2 := makeMessage(true)
 	{
-		w := &SyslogFileWriter{FileName: fname}
+		w := &FileWriter{FileName: fname}
 		err = w.Write(m1)
 		assert.NoError(err)
 		err = w.Close()
@@ -172,7 +172,7 @@ func Test04SyslogFileWriter(t *testing.T) {
 	}
 
 	{
-		w := &SyslogFileWriter{FileName: fname}
+		w := &FileWriter{FileName: fname}
 		err = w.Write(m2)
 		assert.NoError(err)
 		err = w.Close()
@@ -184,25 +184,16 @@ func Test04SyslogFileWriter(t *testing.T) {
 	assert.NoError(err)
 }
 
-func Test05Syslog(t *testing.T) {
-	var err error
-
+func Test05Logger(t *testing.T) {
 	assert := assert.New(t)
-
-	logfile := "./mylog.txt"
-
-	err = safeRemove(logfile)
-	assert.NoError(err)
 
 	// the following clause is what a developer would do
 	var buf bytes.Buffer
 	{
-		writer := &SyslogWriter{
+		writer := &Writer{
 			Writer: &buf,
 		}
-		logger := &Syslogger{
-			Writer: writer,
-		}
+		logger := NewLogger(writer)
 		logger.Warning("bonk")
 		logger.Error("Bonk")
 		logger.Fatal("BONK")
@@ -210,7 +201,7 @@ func Test05Syslog(t *testing.T) {
 
 	mssg := buf.String()
 
-	pri := func(severity Severity, str string) {
+	check := func(severity Severity, str string) {
 		facility := DefaultFacility
 		host, err := os.Hostname()
 		assert.NoError(err)
@@ -220,7 +211,76 @@ func Test05Syslog(t *testing.T) {
 		assert.Contains(mssg, str)
 	}
 
-	pri(Warning, "bonk")
-	pri(Error, "Bonk")
-	pri(Fatal, "BONK")
+	check(Warning, "bonk")
+	check(Error, "Bonk")
+	check(Fatal, "BONK")
+}
+
+func Test06LogLevel(t *testing.T) {
+	assert := assert.New(t)
+
+	var buf bytes.Buffer
+	{
+		writer := &Writer{
+			Writer: &buf,
+		}
+		logger := NewLogger(writer)
+		logger.MinimumSeverity = Error
+		logger.Warning("bonk")
+		logger.Error("Bonk")
+		logger.Fatal("BONK")
+	}
+
+	mssg := buf.String()
+
+	check := func(severity Severity, str string) {
+		facility := DefaultFacility
+		host, err := os.Hostname()
+		assert.NoError(err)
+		assert.Contains(mssg, fmt.Sprintf("<%d>", facility*8+severity.Value()))
+		assert.Contains(mssg, fmt.Sprintf(" %d ", os.Getpid()))
+		assert.Contains(mssg, fmt.Sprintf(" %s ", host))
+		assert.Contains(mssg, str)
+	}
+
+	//pri(Warning, "bonk")
+	assert.NotContains(mssg, "bonk")
+
+	check(Error, "Bonk")
+	check(Fatal, "BONK")
+}
+
+func Test07StackFrame(t *testing.T) {
+	assert := assert.New(t)
+
+	function, file, line := stackFrame(-1)
+	//log.Printf("%s\t%s\t%d", function, file, line)
+	assert.EqualValues(file, "SyslogMessage.go")
+	assert.True(line > 1 && line < 1000)
+	assert.EqualValues("syslog.stackFrame", function)
+
+	function, file, line = stackFrame(0)
+	//log.Printf("%s\t%s\t%d", function, file, line)
+	assert.EqualValues(file, "Syslog_test.go")
+	assert.True(line > 1 && line < 1000)
+	assert.EqualValues("syslog.Test07StackFrame", function)
+}
+
+func Test08SourceElement(t *testing.T) {
+	assert := assert.New(t)
+
+	var buf bytes.Buffer
+	{
+		writer := &Writer{
+			Writer: &buf,
+		}
+		logger := NewLogger(writer)
+		logger.UseSourceElement = true
+		logger.Fatal("BONK")
+	}
+
+	mssg := buf.String()
+
+	assert.Contains(mssg, "pzsource")
+	assert.Contains(mssg, "syslog.Test08SourceElement")
 }

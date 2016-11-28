@@ -32,7 +32,7 @@ type Service struct {
 	sync.Mutex
 	stats Stats
 	//logger    pzlogger.IClient
-	syslogger *syslogger.Syslogger
+	syslogger *syslogger.Logger
 	origin    string
 }
 
@@ -44,11 +44,11 @@ func (service *Service) Init(sys *piazza.SystemConfig, loggerClient pzlogger.ICl
 
 	service.origin = string(sys.Name)
 
-	service.syslogger = &syslogger.Syslogger{
-		Writer: &pzlogger.SyslogElkWriter{
-			Client: loggerClient,
-		},
+	writer := &pzlogger.SyslogElkWriter{
+		Client: loggerClient,
 	}
+
+	service.syslogger = syslogger.NewLogger(writer)
 
 	service.syslogger.Info("uuidgen service started")
 

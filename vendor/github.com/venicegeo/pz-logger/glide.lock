@@ -1,10 +1,10 @@
 hash: 2fc3bf436db0c442e46ecd0ebc3a32a523ce8eb57c1eae71763cfb31776c06e8
-updated: 2016-11-26T20:26:42.600704808-05:00
+updated: 2016-11-28T11:04:15.764703019-05:00
 imports:
 - name: github.com/fvbock/endless
   version: 67d0a784ad8ab10a69d12107f6de220db0c18002
 - name: github.com/gin-gonic/gin
-  version: 9177f01c2843b91820780197f521ba48554b9df3
+  version: bb159f9260a262fccbdbd6f37f8575d1e7e6aaa0
   subpackages:
   - binding
   - render
@@ -19,7 +19,7 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/venicegeo/pz-gocommon
-  version: 19539234495e742acd0f183c6f8ee2e69e30019c
+  version: a879d1be17cc0570c9f92b6538a575e2d24a2c42
   subpackages:
   - elasticsearch
   - gocommon
@@ -32,7 +32,7 @@ imports:
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/olivere/elastic.v3
-  version: eaecbad7a83e6b60f131825553e5eb7fd5a50b41
+  version: 060365a7e27c56c938b234824ef7f9a3a7834b99
   subpackages:
   - backoff
   - uritemplates

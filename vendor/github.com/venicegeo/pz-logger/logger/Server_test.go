@@ -492,11 +492,10 @@ func (suite *LoggerTester) Test10Syslog() {
 	suite.setupFixture()
 	defer suite.teardownFixture()
 
-	syslogger := &syslog.Syslogger{
-		Writer: &SyslogElkWriter{
-			Client: suite.client,
-		},
+	writer := &SyslogElkWriter{
+		Client: suite.client,
 	}
+	syslogger := syslog.NewLogger(writer)
 
 	{
 		s := "The quick brown fox"

@@ -22,20 +22,20 @@ import (
 
 //---------------------------------------------------------------------
 
-// SyslogWriter is an interface for writing a SyslogMessage to some sort of output.
-type SyslogWriterI interface {
-	Write(*SyslogMessage) error
+// WriterI is an interface for writing a Message to some sort of output.
+type WriterI interface {
+	Write(*Message) error
 }
 
 //---------------------------------------------------------------------
 
-// SyslogSimpleWriter implements the SyslogWriter, writing to a generic "io.Writer" target
-type SyslogWriter struct {
+// Writer implements the WriterI interface, writing to a generic "io.Writer" target
+type Writer struct {
 	Writer io.Writer
 }
 
 // Write writes the message to the io.Writer supplied.
-func (w *SyslogWriter) Write(mssg *SyslogMessage) error {
+func (w *Writer) Write(mssg *Message) error {
 	if w == nil || w.Writer == nil {
 		return fmt.Errorf("writer not set not set")
 	}
@@ -50,14 +50,14 @@ func (w *SyslogWriter) Write(mssg *SyslogMessage) error {
 
 //---------------------------------------------------------------------
 
-// SyslogFileWriter implements the SyslogWriter, writing to a given file
-type SyslogFileWriter struct {
+// FileWriter implements the WriterI, writing to a given file
+type FileWriter struct {
 	FileName string
 	file     *os.File
 }
 
 // Write writes the message to the supplied file.
-func (w *SyslogFileWriter) Write(mssg *SyslogMessage) error {
+func (w *FileWriter) Write(mssg *Message) error {
 	var err error
 
 	if w == nil || w.FileName == "" {
@@ -81,7 +81,7 @@ func (w *SyslogFileWriter) Write(mssg *SyslogMessage) error {
 	return nil
 }
 
-// Close closes the file. The creator of the SyslogFileWriter must call this.
-func (w *SyslogFileWriter) Close() error {
+// Close closes the file. The creator of the FileWriter must call this.
+func (w *FileWriter) Close() error {
 	return w.file.Close()
 }

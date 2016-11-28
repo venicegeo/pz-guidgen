@@ -17,6 +17,8 @@ package syslog
 import (
 	"fmt"
 	"os"
+	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -27,14 +29,18 @@ import (
 
 //---------------------------------------------------------------------
 
+const privateEnterpriseNumber = "48851" // Flaxen's PEN
+const DefaultFacility = 1
+const DefaultVersion = 1
+
 type Severity int
 
 func (s Severity) Value() int { return int(s) }
 
 const (
-	Emergency     Severity = 0	// not used by Piazza
-	Alert         Severity = 1	// not used by Piazza
-	Fatal         Severity = 2 	// called Critical in the spec
+	Emergency     Severity = 0 // not used by Piazza
+	Alert         Severity = 1 // not used by Piazza
+	Fatal         Severity = 2 // called Critical in the spec
 	Error         Severity = 3
 	Warning       Severity = 4
 	Notice        Severity = 5
@@ -42,12 +48,9 @@ const (
 	Debug         Severity = 7
 )
 
-const DefaultFacility = 1
-const DefaultVersion = 1
-
-// SyslogMessage represents all the fields of a native RFC5424 object, plus
+// Message represents all the fields of a native RFC5424 object, plus
 // our own two SDEs.
-type SyslogMessage struct {
+type Message struct {
 	Facility    int            `json:"facility"`
 	Severity    Severity       `json:"severity"`
 	Version     int            `json:"version"`
@@ -58,11 +61,12 @@ type SyslogMessage struct {
 	MessageID   string         `json:"messageId"`
 	AuditData   *AuditElement  `json:"auditData"`
 	MetricData  *MetricElement `json:"metricData"`
+	SourceData  *SourceElement `json:"sourceData"`
 	Message     string         `json:"message"`
 }
 
-// NewSyslogMessage returns a SyslogMessage with the defaults filled in for you.
-func NewSyslogMessage() *SyslogMessage {
+// NewMessage returns a Message with the defaults filled in for you.
+func NewMessage() *Message {
 	var err error
 
 	host, err := os.Hostname()
@@ -71,7 +75,7 @@ func NewSyslogMessage() *SyslogMessage {
 	}
 	host += " "
 
-	m := &SyslogMessage{
+	m := &Message{
 		Facility:    DefaultFacility,
 		Severity:    Informational,
 		Version:     DefaultVersion,
@@ -82,14 +86,15 @@ func NewSyslogMessage() *SyslogMessage {
 		MessageID:   "",
 		AuditData:   nil,
 		MetricData:  nil,
+		SourceData:  nil,
 		Message:     "",
 	}
 
 	return m
 }
 
-// String builds and returns the RFC5424-style textual representation of a SyslogMessage.
-func (m *SyslogMessage) String() string {
+// String builds and returns the RFC5424-style textual representation of a Message.
+func (m *Message) String() string {
 	pri := m.Facility*8 + m.Severity.Value()
 
 	timestamp := m.TimeStamp.Format(time.RFC3339)
@@ -125,6 +130,9 @@ func (m *SyslogMessage) String() string {
 	if m.MetricData != nil {
 		sdes = append(sdes, m.MetricData.String())
 	}
+	if m.SourceData != nil {
+		sdes = append(sdes, m.SourceData.String())
+	}
 	sde := strings.Join(sdes, " ")
 	if sde == "" {
 		sde = "-"
@@ -136,8 +144,8 @@ func (m *SyslogMessage) String() string {
 	return s
 }
 
-func ParseSyslogMessage(s string) (*SyslogMessage, error) {
-	m := &SyslogMessage{}
+func ParseMessageString(s string) (*Message, error) {
+	m := &Message{}
 
 	buff := []byte(s)
 	p := rfc5424.NewParser(buff)
@@ -165,7 +173,7 @@ func ParseSyslogMessage(s string) (*SyslogMessage, error) {
 
 // IsSecurityAudit returns true iff the audit action is something we need to formally
 // record as an auidtable event.
-func (m *SyslogMessage) IsSecurityAudit() bool {
+func (m *Message) IsSecurityAudit() bool {
 	if m.AuditData == nil {
 		return false
 	}
@@ -178,7 +186,7 @@ func (m *SyslogMessage) IsSecurityAudit() bool {
 	return false
 }
 
-func (m *SyslogMessage) validate() error {
+func (m *Message) validate() error {
 	if m.Facility != DefaultFacility {
 		return fmt.Errorf("Invalid Message.Facility: %d", m.Facility)
 	}
@@ -204,9 +212,40 @@ func (m *SyslogMessage) validate() error {
 	return nil
 }
 
-//---------------------------------------------------------------------
+// Validate checks to see if a Message is well-formed.
+func (m *Message) Validate() error {
+	var err error
 
-const privateEnterpriseNumber = "48851" // Flaxen's PEN
+	err = m.validate()
+	if err != nil {
+		return err
+	}
+
+	if m.AuditData != nil {
+		err = m.AuditData.validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	if m.MetricData != nil {
+		err = m.MetricData.validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	if m.SourceData != nil {
+		err = m.SourceData.validate()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//---------------------------------------------------------------------
 
 // AuditElement represents an SDE for auditing (security-specific of just general).
 type AuditElement struct {
@@ -221,13 +260,6 @@ var securityAuditActions = []string{
 	"read",
 	"update",
 	"delete",
-}
-
-// MetricElement represents an SDE for recoridng metrics.
-type MetricElement struct {
-	Name   string  `json:"name"`
-	Value  float64 `json:"value"`
-	Object string  `json:"object"`
 }
 
 func (ae *AuditElement) validate() error {
@@ -253,6 +285,15 @@ func (ae *AuditElement) String() string {
 	return s
 }
 
+//---------------------------------------------------------------------
+
+// MetricElement represents an SDE for recoridng metrics.
+type MetricElement struct {
+	Name   string  `json:"name"`
+	Value  float64 `json:"value"`
+	Object string  `json:"object"`
+}
+
 func (me *MetricElement) validate() error {
 	if me.Name == "" {
 		return fmt.Errorf("MetricElement.Name not set")
@@ -273,28 +314,58 @@ func (me *MetricElement) String() string {
 	return s
 }
 
-// Validate checks to see if a SyslogMessage is well-formed.
-func (m *SyslogMessage) Validate() error {
-	var err error
+//---------------------------------------------------------------------
 
-	err = m.validate()
-	if err != nil {
-		return err
+// SourceElement represents an SDE for tracking the message back to the source code.
+type SourceElement struct {
+	File     string `json:"file"`
+	Function string `json:"function"`
+	Line     int    `json:"line"`
+}
+
+func NewSourceElement(skip int) *SourceElement {
+	function, file, line := stackFrame(skip)
+	se := &SourceElement{
+		File:     file,
+		Function: function,
+		Line:     line,
+	}
+	return se
+}
+
+// stackFrame returns info about the requested stack frame. If skip==0,
+// info about the caller of stackFrame is returned. If skip==1, info
+// about the caller of the caller of stackFrame is returned.
+func stackFrame(skip int) (function string, file string, line int) {
+
+	pc, file, line, ok := runtime.Caller(skip + 1)
+	if !ok {
+		return "", "", 0
 	}
 
-	if m.AuditData != nil {
-		err = m.AuditData.validate()
-		if err != nil {
-			return err
-		}
-	}
+	fnc := runtime.FuncForPC(pc)
+	function = fnc.Name()
 
-	if m.MetricData != nil {
-		err = m.MetricData.validate()
-		if err != nil {
-			return err
-		}
+	return path.Base(function), path.Base(file), line
+}
+
+func (se *SourceElement) validate() error {
+	if se.Function == "" {
+		return fmt.Errorf("SourceElement.Function not set")
+	}
+	if se.File == "" {
+		return fmt.Errorf("SourceElement.File not set")
+	}
+	if se.Line < 0 || se.Line > 10000 {
+		return fmt.Errorf("SourceElement.Line is invalid")
 	}
 
 	return nil
+}
+
+// String builds the text string of the SDE
+func (me *SourceElement) String() string {
+	s := fmt.Sprintf("[pzsource@%s File=\"%s\" Function=\"%s\" Line=\"%d\"]",
+		privateEnterpriseNumber, me.File, me.Function, me.Line)
+	return s
 }
