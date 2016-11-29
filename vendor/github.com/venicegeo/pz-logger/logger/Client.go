@@ -191,7 +191,7 @@ func (w *SyslogElkWriter) Write(mNew *syslog.Message) error {
 		return fmt.Errorf("Log writer client has invalid type")
 	case *Client:
 		h := w.Client.(*Client).h
-		jresp := h.PzPost("/message", mNew)
+		jresp := h.PzPost("/syslog", mNew)
 		if jresp.IsError() {
 			return jresp.ToError()
 		}
