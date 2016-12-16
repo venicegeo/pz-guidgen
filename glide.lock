@@ -1,5 +1,5 @@
 hash: fa131b6531b3d3802b1155bd00fe72793134474dae68c4518b88b59fe90249bb
-updated: 2016-12-16T11:50:25.595407275-05:00
+updated: 2016-12-16T11:53:07.452760572-05:00
 imports:
 - name: github.com/gin-gonic/gin
   version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
@@ -21,7 +21,7 @@ imports:
   - gocommon
   - syslog
 - name: github.com/venicegeo/pz-logger
-  version: 7ad6ade0eca07034d7fe0536edb50f54744029b3
+  version: f7632c7b2b7dd15500e729ebace7b496818c9509
   subpackages:
   - logger
 - name: golang.org/x/net
@@ -47,8 +47,6 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
-- name: github.com/pborman/uuid
-  version: 5007efa264d92316c43112bc573e754bc889b7b1
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:

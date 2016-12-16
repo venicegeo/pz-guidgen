@@ -20,7 +20,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
