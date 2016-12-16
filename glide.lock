@@ -1,5 +1,5 @@
 hash: fa131b6531b3d3802b1155bd00fe72793134474dae68c4518b88b59fe90249bb
-updated: 2016-12-16T11:13:13.151155409-05:00
+updated: 2016-12-16T11:50:25.595407275-05:00
 imports:
 - name: github.com/gin-gonic/gin
   version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
@@ -15,7 +15,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/venicegeo/pz-gocommon
-  version: 6440150993af94549018728bd109b09e3e95fefb
+  version: f9b9b4f6ce2205306d35a1c48eb9a25e8539f7ba
   subpackages:
   - elasticsearch
   - gocommon
