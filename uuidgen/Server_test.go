@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pborman/uuid"
 	assert "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
@@ -31,7 +32,8 @@ type UuidgenTester struct {
 	sys            *piazza.SystemConfig
 	totalRequested int
 	totalGenerated int
-	logger         pzlogger.IClient
+	mockLogger     *pzlogger.MockLoggerKit
+	loggerClient   *pzlogger.Client
 	client         IClient
 	genericServer  *piazza.GenericServer
 	server         *Server
@@ -49,10 +51,11 @@ func (suite *UuidgenTester) SetupSuite() {
 		log.Fatal(err)
 	}
 
-	suite.logger, err = pzlogger.NewMockClient()
+	suite.mockLogger, err = pzlogger.NewMockLoggerKit()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	suite.client, err = NewMockClient()
 	if err != nil {
 		log.Fatal(err)
@@ -62,7 +65,7 @@ func (suite *UuidgenTester) SetupSuite() {
 	suite.totalGenerated = 0
 
 	suite.service = &Service{}
-	err = suite.service.Init(suite.sys, suite.logger)
+	err = suite.service.Init(suite.sys, suite.mockLogger.Client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,6 +86,11 @@ func (suite *UuidgenTester) SetupSuite() {
 
 func (suite *UuidgenTester) TearDownSuite() {
 	err := suite.genericServer.Stop()
+	if err != nil {
+		panic(err)
+	}
+
+	err = suite.mockLogger.Close()
 	if err != nil {
 		panic(err)
 	}
