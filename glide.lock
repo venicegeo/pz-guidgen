@@ -1,5 +1,5 @@
 hash: fa131b6531b3d3802b1155bd00fe72793134474dae68c4518b88b59fe90249bb
-updated: 2016-12-16T22:17:44.934627557-05:00
+updated: 2016-12-16T22:27:43.433555224-05:00
 imports:
 - name: github.com/braintree/manners
   version: 82a8879fc5fd0381fa8b2d8033b19bf255252088
@@ -49,8 +49,6 @@ testImports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
-- name: github.com/pborman/uuid
-  version: 5007efa264d92316c43112bc573e754bc889b7b1
 - name: github.com/pmezard/go-difflib
   version: 792786c7400a136282c1664665ae0a8db921c6c2
   subpackages:
