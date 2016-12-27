@@ -18,6 +18,7 @@ import (
 	"log"
 
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
+	pzsyslog "github.com/venicegeo/pz-gocommon/syslog"
 	pzuuidgen "github.com/venicegeo/pz-uuidgen/uuidgen"
 )
 
