@@ -42,23 +42,31 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	var esi elasticsearch.IIndex = idx
-	err = pzlogger.SetupElastic(esi)
-	if err != nil {
-		log.Fatal(err)
-	}
+	var existed bool
 
 	logWriter := syslogger.ElasticWriter{Esi: esi}
-	err = logWriter.SetType(pzlogger.LogSchema)
-	if err != nil {
+	if err = logWriter.SetType(pzlogger.LogSchema); err != nil {
 		log.Fatal(err)
 	}
-	//auditWriter := syslogger.ElasticWriter{Esi: esi}
-	//auditWriter.SetType(pzlogger.SecuritySchema)
-	syslogWriter := syslogger.SyslogdWriter{}
+	if existed, err = logWriter.CreateIndex(); err != nil {
+		log.Fatal(err)
+	}
+	if !existed {
+		log.Printf("Created index: %s", esi.IndexName())
+	}
+	if existed, err = logWriter.CreateType(pzlogger.LogMapping); err != nil {
+		log.Fatal(err)
+	}
+	if !existed {
+		log.Printf("Created type: %s", pzlogger.LogSchema)
+	}
+
+	stdOutWriter := syslogger.STDOUTWriter{}
 
 	service := &pzlogger.Service{}
-	err = service.Init(sys, []syslogger.Writer{&logWriter}, []syslogger.Writer{&syslogWriter}, esi)
+	err = service.Init(sys, []syslogger.Writer{&logWriter}, []syslogger.Writer{&stdOutWriter}, esi)
 	if err != nil {
 		log.Fatal(err)
 	}
