@@ -17,7 +17,6 @@ package main
 import (
 	"log"
 
-	"github.com/venicegeo/pz-gocommon/elasticsearch"
 	piazza "github.com/venicegeo/pz-gocommon/gocommon"
 	pzsyslog "github.com/venicegeo/pz-gocommon/syslog"
 	pzuuidgen "github.com/venicegeo/pz-uuidgen/uuidgen"
@@ -38,17 +37,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	idx, err := elasticsearch.NewIndex(sys, loggerIndex, "")
-	if err != nil {
-		log.Fatal(err)
-	}
-	logWriter, err := pzsyslog.GetRequiredESIWriters(idx, loggerType)
-	if err != nil {
-		log.Fatal(err)
-	}
-	stdOutWriter := pzsyslog.StdoutWriter{}
 
-	kit, err := pzuuidgen.NewKit(sys, logWriter, &stdOutWriter)
+	logWriter, auditWriter, err := pzsyslog.GetRequiredWriters(sys, loggerIndex, loggerType)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	kit, err := pzuuidgen.NewKit(sys, logWriter, auditWriter)
 	if err != nil {
 		log.Fatal(err)
 	}
