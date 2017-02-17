@@ -12,6 +12,3 @@ testImport:
   subpackages:
   - assert
   - suite
-- package: github.com/venicegeo/pz-logger
-  subpackages:
-  - logger
