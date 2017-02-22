@@ -33,12 +33,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	loggerIndex, loggerType, err := pzsyslog.GetRequiredEnvVars()
+	loggerIndex, err := pzsyslog.GetRequiredEnvVars()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	logWriter, auditWriter, err := pzsyslog.GetRequiredWriters(sys, loggerIndex, loggerType)
+	logWriter, auditWriter, err := pzsyslog.GetRequiredWriters(sys, loggerIndex)
 	if err != nil {
 		log.Fatal(err)
 	}
